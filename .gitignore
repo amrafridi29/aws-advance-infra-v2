@@ -1,0 +1,216 @@
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+*.tfplan.*
+.terraform/
+.terraform.lock.hcl
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfstate files, which are managed by Terraform
+*.tfstate
+*.tfstate.*
+
+# Ignore override files as they are usually used to override resources locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Include override files you do wish to add to version control using negated pattern
+# !example_override.tf
+
+# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
+# example: *tfplan*
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# AWS credentials and configuration
+.aws/
+aws-credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Logs
+*.log
+logs/
+log/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Cache directories
+.cache/
+*.cache
+
+# Node.js (if using any Node-based tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python (if using any Python-based tools)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Ruby (if using any Ruby-based tools)
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples/
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# Java (if using any Java-based tools)
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+
+# Go (if using any Go-based tools)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Terraform specific patterns
+.terraform.tfstate.lock.info
+*.tfstate.backup
+*.tfstate.old
+*.tfstate.new
+*.tfstate.tmp
+
+# Local development files
+local/
+local.*
+dev/
+dev.*
+
+# Documentation build artifacts
+docs/_build/
+docs/.doctrees/
+docs/html/
+
+# Test artifacts
+test-results/
+coverage/
+.nyc_output/
+
+# CI/CD artifacts
+.circleci/
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+azure-pipelines.yml
+
+# Secrets and sensitive files
+secrets/
+secrets.*
+*.secret
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.csr
+password
+passwords
+secret
+secrets
+token
+tokens
+api_key
+api_keys
+access_key
+access_keys
+secret_key
+secret_keys
+
+# Backup and archive files
+*.tar
+*.tar.gz
+*.tar.bz2
+*.zip
+*.rar
+*.7z
+*.gz
+*.bz2
+
+# System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Application specific
+*.pid
+*.seed
+*.pid.lock
