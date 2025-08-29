@@ -300,6 +300,31 @@ resource "aws_security_group" "database" {
   )
 }
 
+# Default Security Group for VPC
+resource "aws_security_group" "default" {
+  count       = var.create_security_groups ? 1 : 0
+  name_prefix = "${local.name_prefix}-default-sg"
+  description = "Default security group for VPC"
+  vpc_id      = var.vpc_id
+
+  # Allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "All outbound traffic"
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-default-sg"
+      Type = "Default"
+    }
+  )
+}
+
 # Load Balancer Security Group
 resource "aws_security_group" "load_balancer" {
   count       = var.create_security_groups ? 1 : 0

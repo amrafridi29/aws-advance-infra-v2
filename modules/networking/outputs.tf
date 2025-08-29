@@ -70,16 +70,6 @@ output "route_table_ids" {
   value       = [aws_route_table.public.id, aws_route_table.private.id]
 }
 
-# Security Group Outputs
-output "default_security_group_id" {
-  description = "ID of the default security group"
-  value       = aws_security_group.default.id
-}
-
-
-
-
-
 # Availability Zone Outputs
 output "availability_zones" {
   description = "List of availability zones used"

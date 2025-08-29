@@ -74,6 +74,16 @@ output "load_balancer_security_group_id" {
   value       = var.create_security_groups ? aws_security_group.load_balancer[0].id : null
 }
 
+output "default_security_group_id" {
+  description = "ID of the default security group"
+  value       = var.create_security_groups ? aws_security_group.default[0].id : null
+}
+
+output "default_security_group_name" {
+  description = "Name of the default security group"
+  value       = var.create_security_groups ? aws_security_group.default[0].name : null
+}
+
 output "load_balancer_security_group_name" {
   description = "Name of the load balancer security group"
   value       = var.create_security_groups ? aws_security_group.load_balancer[0].name : null
@@ -82,6 +92,7 @@ output "load_balancer_security_group_name" {
 output "security_group_ids" {
   description = "List of all security group IDs"
   value = compact([
+    var.create_security_groups ? aws_security_group.default[0].id : null,
     var.create_security_groups ? aws_security_group.app[0].id : null,
     var.create_security_groups && var.enable_database_access ? aws_security_group.database[0].id : null,
     var.create_security_groups ? aws_security_group.load_balancer[0].id : null

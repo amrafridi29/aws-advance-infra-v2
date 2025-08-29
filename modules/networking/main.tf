@@ -175,24 +175,3 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
-# Default Security Group for VPC
-resource "aws_security_group" "default" {
-  name_prefix = "${local.name_prefix}-default-sg"
-  vpc_id      = aws_vpc.main.id
-
-  # Allow all outbound traffic
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.name_prefix}-default-sg"
-      Type = "Default"
-    }
-  )
-}
