@@ -40,10 +40,10 @@ output "security_outputs" {
 }
 
 # Storage Module Outputs
-# output "storage_outputs" {
-#   description = "Storage module outputs"
-#   value = module.storage
-# }
+output "storage_outputs" {
+  description = "Storage module outputs"
+  value       = module.storage
+}
 
 # Compute Module Outputs
 # output "compute_outputs" {

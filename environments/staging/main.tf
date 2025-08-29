@@ -134,17 +134,39 @@ module "security" {
   tags = local.common_tags
 }
 
-# TODO: Storage Module (will create next)
-# module "storage" {
-#   source = "../../modules/storage"
-#   
-#   environment    = var.environment
-#   project_name   = var.project_name
-#   vpc_id         = module.networking.vpc_id
-#   subnet_ids     = module.networking.private_subnet_ids
-#   
-#   tags = local.common_tags
-# }
+# Storage Module
+module "storage" {
+  source = "../../modules/storage"
+
+  environment  = var.environment
+  project_name = var.project_name
+  vpc_id       = module.networking.vpc_id
+  subnet_ids   = module.networking.private_subnet_ids
+
+  # S3 Storage
+  enable_s3_storage = true
+
+  # RDS Database (disabled for staging - requires password)
+  enable_rds            = false
+  rds_instance_class    = "db.t3.micro"
+  rds_engine            = "mysql"
+  rds_engine_version    = "8.0"
+  rds_allocated_storage = 5
+  rds_database_name     = "staging_db"
+  rds_username          = "staging_user"
+  rds_password          = "db-password"
+
+  # ElastiCache (disabled for staging)
+  enable_elasticache = false
+
+  # EBS Volumes (disabled for staging)
+  enable_ebs = false
+
+  # Encryption
+  kms_key_arn = module.encryption.main_key_arn
+
+  tags = local.common_tags
+}
 
 # TODO: Compute Module (will create next)
 # module "compute" {
