@@ -79,6 +79,10 @@ module "networking" {
   enable_nat_gateway = var.enable_nat_gateway
   single_nat_gateway = var.single_nat_gateway
 
+  # Load Balancer
+  enable_load_balancer            = true
+  load_balancer_security_group_id = module.security.load_balancer_security_group_id
+
   # Tags
   tags = local.common_tags
 }
@@ -182,8 +186,7 @@ module "compute" {
   # ECS Configuration
   enable_ecs = true
 
-  # Load Balancer
-  enable_load_balancer = true
+
 
   # ECS Service
   enable_ecs_service = true
@@ -195,8 +198,7 @@ module "compute" {
   enable_auto_scaling = false
 
   # Security Groups
-  load_balancer_security_group_id = module.security.load_balancer_security_group_id
-  ecs_service_security_group_id   = module.security.app_security_group_id
+  ecs_service_security_group_id = module.security.app_security_group_id
 
   # IAM Roles
   ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn

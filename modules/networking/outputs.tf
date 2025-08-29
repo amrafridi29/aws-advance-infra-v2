@@ -76,15 +76,42 @@ output "availability_zones" {
   value       = var.availability_zones
 }
 
+# Load Balancer Outputs
+output "load_balancer_arn" {
+  description = "ARN of the application load balancer"
+  value       = var.enable_load_balancer ? aws_lb.main[0].arn : null
+}
+
+output "load_balancer_dns_name" {
+  description = "DNS name of the load balancer"
+  value       = var.enable_load_balancer ? aws_lb.main[0].dns_name : null
+}
+
+output "load_balancer_zone_id" {
+  description = "Zone ID of the load balancer"
+  value       = var.enable_load_balancer ? aws_lb.main[0].zone_id : null
+}
+
+output "target_group_arn" {
+  description = "ARN of the target group"
+  value       = var.enable_load_balancer ? aws_lb_target_group.main[0].arn : null
+}
+
+output "target_group_name" {
+  description = "Name of the target group"
+  value       = var.enable_load_balancer ? aws_lb_target_group.main[0].name : null
+}
+
 # Network Information
 output "network_summary" {
   description = "Summary of the networking infrastructure"
   value = {
-    vpc_id              = aws_vpc.main.id
-    vpc_cidr            = aws_vpc.main.cidr_block
-    public_subnets      = length(aws_subnet.public)
-    private_subnets     = length(aws_subnet.private)
-    availability_zones  = length(var.availability_zones)
-    nat_gateway_enabled = var.enable_nat_gateway
+    vpc_id                = aws_vpc.main.id
+    vpc_cidr              = aws_vpc.main.cidr_block
+    public_subnets        = length(aws_subnet.public)
+    private_subnets       = length(aws_subnet.private)
+    availability_zones    = length(var.availability_zones)
+    nat_gateway_enabled   = var.enable_nat_gateway
+    load_balancer_enabled = var.enable_load_balancer
   }
 }

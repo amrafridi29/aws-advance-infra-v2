@@ -51,6 +51,17 @@ output "compute_outputs" {
   value       = module.compute
 }
 
+# Load Balancer Outputs (from Networking Module)
+output "load_balancer_dns_name" {
+  description = "Load balancer DNS name"
+  value       = module.networking.load_balancer_dns_name
+}
+
+output "target_group_arn" {
+  description = "Target group ARN"
+  value       = module.networking.target_group_arn
+}
+
 # Monitoring Module Outputs
 output "monitoring_outputs" {
   description = "Monitoring module outputs"

@@ -17,37 +17,7 @@ output "ecs_cluster_id" {
   value       = var.enable_ecs ? aws_ecs_cluster.main[0].id : null
 }
 
-# Load Balancer Outputs
-output "load_balancer_arn" {
-  description = "ARN of the application load balancer"
-  value       = var.enable_load_balancer ? aws_lb.main[0].arn : null
-}
 
-output "load_balancer_dns_name" {
-  description = "DNS name of the load balancer"
-  value       = var.enable_load_balancer ? aws_lb.main[0].dns_name : null
-}
-
-output "load_balancer_zone_id" {
-  description = "Zone ID of the load balancer"
-  value       = var.enable_load_balancer ? aws_lb.main[0].zone_id : null
-}
-
-# Target Group Outputs
-output "target_group_arn" {
-  description = "ARN of the target group"
-  value       = var.enable_load_balancer ? aws_lb_target_group.main[0].arn : null
-}
-
-output "target_group_name" {
-  description = "Name of the target group"
-  value       = var.enable_load_balancer ? aws_lb_target_group.main[0].name : null
-}
-
-output "target_group_arns" {
-  description = "List of target group ARNs"
-  value       = var.enable_load_balancer ? [aws_lb_target_group.main[0].arn] : []
-}
 
 # ECS Service Outputs
 output "ecs_service_arn" {
@@ -114,13 +84,9 @@ output "compute_summary" {
   value = {
     ecs_enabled                 = var.enable_ecs
     ecs_service_enabled         = var.enable_ecs && var.enable_ecs_service
-    load_balancer_enabled       = var.enable_load_balancer
     service_discovery_enabled   = var.enable_service_discovery
     auto_scaling_enabled        = var.enable_auto_scaling && var.enable_ecs_service
-    https_enabled               = var.enable_https
     ecs_cluster_name            = var.enable_ecs ? aws_ecs_cluster.main[0].name : null
-    load_balancer_dns_name      = var.enable_load_balancer ? aws_lb.main[0].dns_name : null
-    target_group_name           = var.enable_load_balancer ? aws_lb_target_group.main[0].name : null
     ecs_service_name            = var.enable_ecs && var.enable_ecs_service ? aws_ecs_service.main[0].name : null
     service_discovery_namespace = var.enable_service_discovery ? aws_service_discovery_private_dns_namespace.main[0].name : null
   }

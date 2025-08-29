@@ -29,6 +29,10 @@ locals {
 
   # Naming convention
   name_prefix = "${var.project_name}-${var.environment}"
+
+  # Generate load balancer names if not provided
+  load_balancer_name = var.load_balancer_name != "" ? var.load_balancer_name : "${var.project_name}-${var.environment}-alb"
+  target_group_name  = var.target_group_name != "" ? var.target_group_name : "${var.project_name}-${var.environment}-tg"
 }
 
 # VPC
@@ -175,3 +179,104 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private.id
 }
 
+# =============================================================================
+# LOAD BALANCER
+# =============================================================================
+
+# Application Load Balancer
+resource "aws_lb" "main" {
+  count = var.enable_load_balancer ? 1 : 0
+
+  name               = local.load_balancer_name
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = var.load_balancer_security_group_id != "" ? [var.load_balancer_security_group_id] : []
+  subnets            = aws_subnet.public[*].id
+
+  enable_deletion_protection = false
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = local.load_balancer_name
+      Type = "Application Load Balancer"
+    }
+  )
+}
+
+# Target Group
+resource "aws_lb_target_group" "main" {
+  count = var.enable_load_balancer ? 1 : 0
+
+  name        = local.target_group_name
+  port        = var.target_group_port
+  protocol    = var.target_group_protocol
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = var.healthy_threshold
+    interval            = var.health_check_interval
+    matcher             = "200"
+    path                = var.health_check_path
+    port                = "traffic-port"
+    protocol            = var.target_group_protocol
+    timeout             = var.health_check_timeout
+    unhealthy_threshold = var.unhealthy_threshold
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = local.target_group_name
+      Type = "Target Group"
+    }
+  )
+}
+
+# HTTP Listener
+resource "aws_lb_listener" "http" {
+  count = var.enable_load_balancer ? 1 : 0
+
+  load_balancer_arn = aws_lb.main[0].arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.main[0].arn
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-http-listener"
+      Type = "HTTP Listener"
+    }
+  )
+}
+
+# HTTPS Listener (if enabled)
+resource "aws_lb_listener" "https" {
+  count = var.enable_load_balancer && var.enable_https ? 1 : 0
+
+  load_balancer_arn = aws_lb.main[0].arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  certificate_arn   = var.certificate_arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.main[0].arn
+  }
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-https-listener"
+      Type = "HTTPS Listener"
+    }
+  )
+}
