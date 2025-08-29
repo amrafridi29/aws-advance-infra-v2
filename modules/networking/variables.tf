@@ -53,17 +53,9 @@ variable "enable_vpn_gateway" {
   default     = false
 }
 
-variable "enable_flow_logs" {
-  description = "Whether to enable VPC Flow Logs"
-  type        = bool
-  default     = true
-}
 
-variable "flow_log_retention_days" {
-  description = "Number of days to retain VPC Flow Logs"
-  type        = number
-  default     = 30
-}
+
+
 
 variable "enable_dns_hostnames" {
   description = "Enable DNS hostnames in the VPC"
@@ -83,11 +75,7 @@ variable "map_public_ip_on_launch" {
   default     = true
 }
 
-variable "vpc_flow_log_iam_role_arn" {
-  description = "ARN of the IAM role for VPC Flow Logs (from security module)"
-  type        = string
-  default     = ""
-}
+
 
 variable "tags" {
   description = "Additional tags to apply to all resources"

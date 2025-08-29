@@ -196,36 +196,3 @@ resource "aws_security_group" "default" {
     }
   )
 }
-
-# VPC Flow Logs IAM role will be provided by the security module
-
-# CloudWatch Log Group for VPC Flow Logs
-resource "aws_cloudwatch_log_group" "vpc_flow_log" {
-  count             = var.enable_flow_logs ? 1 : 0
-  name              = "/aws/vpc/flow-logs/${aws_vpc.main.id}"
-  retention_in_days = var.flow_log_retention_days
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.name_prefix}-flow-logs-lg"
-    }
-  )
-}
-
-# VPC Flow Logs
-resource "aws_flow_log" "vpc_flow_log" {
-  count                = var.enable_flow_logs ? 1 : 0
-  log_destination_type = "cloud-watch-logs"
-  log_destination      = aws_cloudwatch_log_group.vpc_flow_log[0].arn
-  traffic_type         = "ALL"
-  vpc_id               = aws_vpc.main.id
-  iam_role_arn         = var.vpc_flow_log_iam_role_arn
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "${local.name_prefix}-flow-logs"
-    }
-  )
-}

@@ -78,10 +78,6 @@ module "networking" {
   # Optional networking features
   enable_nat_gateway = var.enable_nat_gateway
   single_nat_gateway = var.single_nat_gateway
-  enable_flow_logs   = var.enable_flow_logs
-
-  # IAM role from security module
-  vpc_flow_log_iam_role_arn = module.security.vpc_flow_log_role_arn
 
   # Tags
   tags = local.common_tags
@@ -137,15 +133,29 @@ module "security" {
 #   tags = local.common_tags
 # }
 
-# TODO: Monitoring Module (will create next)
-# module "monitoring" {
-#   source = "../../modules/monitoring"
-#   
-#   environment    = var.environment
-#   project_name   = var.project_name
-#   vpc_id         = module.networking.vpc_id
-#   
-#   tags = local.common_tags
-# }
+# Monitoring Module
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  environment  = var.environment
+  project_name = var.project_name
+  vpc_id       = module.networking.vpc_id
+
+  # VPC Flow Logs
+  enable_vpc_flow_logs      = var.enable_flow_logs
+  vpc_flow_log_iam_role_arn = module.security.vpc_flow_log_role_arn
+
+  # CloudWatch Logs
+  enable_cloudwatch_logs = var.enable_cloudwatch_logs
+
+  # CloudTrail (disabled for staging - requires S3 bucket)
+  enable_cloudtrail = false
+
+  # Alarms and Dashboards (optional for staging)
+  enable_alarms     = false
+  enable_dashboards = false
+
+  tags = local.common_tags
+}
 
 # Outputs are defined in outputs.tf

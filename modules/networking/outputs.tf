@@ -76,16 +76,7 @@ output "default_security_group_id" {
   value       = aws_security_group.default.id
 }
 
-# VPC Flow Logs Outputs
-output "flow_log_ids" {
-  description = "List of VPC Flow Log IDs"
-  value       = aws_flow_log.vpc_flow_log[*].id
-}
 
-output "flow_log_group_names" {
-  description = "List of CloudWatch Log Group names for VPC Flow Logs"
-  value       = aws_cloudwatch_log_group.vpc_flow_log[*].name
-}
 
 
 
@@ -105,6 +96,5 @@ output "network_summary" {
     private_subnets     = length(aws_subnet.private)
     availability_zones  = length(var.availability_zones)
     nat_gateway_enabled = var.enable_nat_gateway
-    flow_logs_enabled   = var.enable_flow_logs
   }
 }

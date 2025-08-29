@@ -135,9 +135,9 @@ variable "enable_cloudwatch_logs" {
 }
 
 variable "enable_cloudtrail" {
-  description = "Enable CloudTrail logging"
+  description = "Enable CloudTrail logging (disabled for staging - requires S3 bucket)"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "retention_days" {

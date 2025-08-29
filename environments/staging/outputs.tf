@@ -40,7 +40,7 @@ output "security_outputs" {
 # }
 
 # Monitoring Module Outputs
-# output "monitoring_outputs" {
-#   description = "Monitoring module outputs"
-#   value = module.monitoring
-# }
+output "monitoring_outputs" {
+  description = "Monitoring module outputs"
+  value       = module.monitoring
+}
