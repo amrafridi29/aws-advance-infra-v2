@@ -87,10 +87,7 @@ output "flow_log_group_names" {
   value       = aws_cloudwatch_log_group.vpc_flow_log[*].name
 }
 
-output "flow_log_iam_role_arn" {
-  description = "ARN of the IAM role for VPC Flow Logs"
-  value       = aws_iam_role.vpc_flow_log[*].arn
-}
+
 
 # Availability Zone Outputs
 output "availability_zones" {

@@ -80,20 +80,36 @@ module "networking" {
   single_nat_gateway = var.single_nat_gateway
   enable_flow_logs   = var.enable_flow_logs
 
+  # IAM role from security module
+  vpc_flow_log_iam_role_arn = module.security.vpc_flow_log_role_arn
+
   # Tags
   tags = local.common_tags
 }
 
-# TODO: Security Module (will create next)
-# module "security" {
-#   source = "../../modules/security"
-#   
-#   environment    = var.environment
-#   project_name   = var.project_name
-#   vpc_id         = module.networking.vpc_id
-#   
-#   tags = local.common_tags
-# }
+# Security Module
+module "security" {
+  source = "../../modules/security"
+
+  environment  = var.environment
+  project_name = var.project_name
+  vpc_id       = module.networking.vpc_id
+
+  # IAM Configuration
+  create_vpc_flow_log_role = true
+  create_app_role          = true
+  create_admin_role        = false # Don't create admin role in staging
+
+  # Security Groups
+  create_security_groups = true
+  allowed_cidr_blocks    = var.allowed_cidr_blocks
+
+  # KMS Configuration
+  enable_kms_encryption = true
+  key_rotation_enabled  = true
+
+  tags = local.common_tags
+}
 
 # TODO: Storage Module (will create next)
 # module "storage" {

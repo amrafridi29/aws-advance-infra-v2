@@ -83,6 +83,12 @@ variable "map_public_ip_on_launch" {
   default     = true
 }
 
+variable "vpc_flow_log_iam_role_arn" {
+  description = "ARN of the IAM role for VPC Flow Logs (from security module)"
+  type        = string
+  default     = ""
+}
+
 variable "tags" {
   description = "Additional tags to apply to all resources"
   type        = map(string)

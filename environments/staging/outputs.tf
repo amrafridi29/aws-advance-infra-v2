@@ -21,12 +21,11 @@ output "networking_outputs" {
   value       = module.networking
 }
 
-# TODO: Uncomment as we create more modules
 # Security Module Outputs
-# output "security_outputs" {
-#   description = "Security module outputs"
-#   value = module.security
-# }
+output "security_outputs" {
+  description = "Security module outputs"
+  value       = module.security
+}
 
 # Storage Module Outputs
 # output "storage_outputs" {
