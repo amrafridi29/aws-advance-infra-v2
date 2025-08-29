@@ -17,61 +17,7 @@ variable "vpc_id" {
   type        = string
 }
 
-# IAM Configuration
-variable "create_admin_role" {
-  description = "Whether to create admin IAM role"
-  type        = bool
-  default     = false
-}
-
-variable "create_app_role" {
-  description = "Whether to create application IAM role"
-  type        = bool
-  default     = true
-}
-
-variable "create_vpc_flow_log_role" {
-  description = "Whether to create VPC Flow Log IAM role"
-  type        = bool
-  default     = true
-}
-
-variable "admin_role_name" {
-  description = "Name for the admin IAM role"
-  type        = string
-  default     = ""
-}
-
-variable "app_role_name" {
-  description = "Name for the application IAM role"
-  type        = string
-  default     = ""
-}
-
-# KMS Configuration
-variable "enable_kms_encryption" {
-  description = "Whether to create KMS encryption keys"
-  type        = bool
-  default     = true
-}
-
-variable "key_rotation_enabled" {
-  description = "Whether to enable KMS key rotation"
-  type        = bool
-  default     = true
-}
-
-variable "kms_key_alias" {
-  description = "Alias for the KMS encryption key"
-  type        = string
-  default     = ""
-}
-
-variable "kms_key_description" {
-  description = "Description for the KMS encryption key"
-  type        = string
-  default     = ""
-}
+# IAM and KMS resources are now handled by dedicated modules
 
 # Security Groups Configuration
 variable "create_security_groups" {

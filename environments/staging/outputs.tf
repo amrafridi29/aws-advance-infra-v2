@@ -21,6 +21,18 @@ output "networking_outputs" {
   value       = module.networking
 }
 
+# IAM Module Outputs
+output "iam_outputs" {
+  description = "IAM module outputs"
+  value       = module.iam
+}
+
+# Encryption Module Outputs
+output "encryption_outputs" {
+  description = "Encryption module outputs"
+  value       = module.encryption
+}
+
 # Security Module Outputs
 output "security_outputs" {
   description = "Security module outputs"

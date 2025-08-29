@@ -83,6 +83,37 @@ module "networking" {
   tags = local.common_tags
 }
 
+# IAM Module
+module "iam" {
+  source = "../../modules/iam"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  # IAM Roles
+  create_app_role     = true
+  create_admin_role   = false
+  create_service_role = false
+
+  # VPC Flow Log Role (required for monitoring)
+  create_vpc_flow_log_role = true
+
+  tags = local.common_tags
+}
+
+# Encryption Module
+module "encryption" {
+  source = "../../modules/encryption"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  # Basic encryption
+  enable_kms_encryption = true
+
+  tags = local.common_tags
+}
+
 # Security Module
 module "security" {
   source = "../../modules/security"
@@ -91,18 +122,14 @@ module "security" {
   project_name = var.project_name
   vpc_id       = module.networking.vpc_id
 
-  # IAM Configuration
-  create_vpc_flow_log_role = true
-  create_app_role          = true
-  create_admin_role        = false # Don't create admin role in staging
-
   # Security Groups
   create_security_groups = true
   allowed_cidr_blocks    = var.allowed_cidr_blocks
-
-  # KMS Configuration
-  enable_kms_encryption = true
-  key_rotation_enabled  = true
+  enable_ssh_access      = false # Disable SSH for staging security
+  enable_http_access     = true  # Enable HTTP for staging
+  enable_https_access    = true  # Enable HTTPS for staging
+  enable_database_access = true  # Enable database access
+  database_port          = 3306  # Default MySQL port
 
   tags = local.common_tags
 }
@@ -143,7 +170,7 @@ module "monitoring" {
 
   # VPC Flow Logs
   enable_vpc_flow_logs      = var.enable_flow_logs
-  vpc_flow_log_iam_role_arn = module.security.vpc_flow_log_role_arn
+  vpc_flow_log_iam_role_arn = module.iam.vpc_flow_log_role_arn
 
   # CloudWatch Logs
   enable_cloudwatch_logs = var.enable_cloudwatch_logs
