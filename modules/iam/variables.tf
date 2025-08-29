@@ -31,6 +31,12 @@ variable "create_service_role" {
   default     = false
 }
 
+variable "create_ecs_task_execution_role" {
+  description = "Whether to create ECS task execution IAM role"
+  type        = bool
+  default     = true
+}
+
 variable "create_vpc_flow_log_role" {
   description = "Whether to create VPC Flow Log IAM role"
   type        = bool

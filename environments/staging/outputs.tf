@@ -46,10 +46,10 @@ output "storage_outputs" {
 }
 
 # Compute Module Outputs
-# output "compute_outputs" {
-#   description = "Compute module outputs"
-#   value = module.compute
-# }
+output "compute_outputs" {
+  description = "Compute module outputs"
+  value       = module.compute
+}
 
 # Monitoring Module Outputs
 output "monitoring_outputs" {

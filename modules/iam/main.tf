@@ -227,6 +227,41 @@ resource "aws_iam_role" "service" {
   )
 }
 
+# ECS Task Execution IAM Role
+resource "aws_iam_role" "ecs_task_execution" {
+  count = var.create_ecs_task_execution_role ? 1 : 0
+  name  = "${local.name_prefix}-ecs-task-execution-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-ecs-task-execution-role"
+      Type = "ECS Task Execution"
+    }
+  )
+}
+
+# ECS Task Execution IAM Policy
+resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
+  count = var.create_ecs_task_execution_role ? 1 : 0
+
+  role       = aws_iam_role.ecs_task_execution[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
 # =============================================================================
 # CUSTOM IAM POLICIES
 # =============================================================================

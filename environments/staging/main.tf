@@ -91,9 +91,10 @@ module "iam" {
   project_name = var.project_name
 
   # IAM Roles
-  create_app_role     = true
-  create_admin_role   = false
-  create_service_role = false
+  create_app_role                = true
+  create_admin_role              = false
+  create_service_role            = false
+  create_ecs_task_execution_role = true
 
   # VPC Flow Log Role (required for monitoring)
   create_vpc_flow_log_role = true
@@ -168,19 +169,41 @@ module "storage" {
   tags = local.common_tags
 }
 
-# TODO: Compute Module (will create next)
-# module "compute" {
-#   source = "../../modules/compute"
-#   
-#   environment        = var.environment
-#   project_name       = var.project_name
-#   vpc_id            = module.networking.vpc_id
-#   public_subnet_ids = module.networking.public_subnet_ids
-#   private_subnet_ids = module.networking.private_subnet_ids
-#   security_group_ids = [module.security.app_security_group_id]
-#   
-#   tags = local.common_tags
-# }
+# Compute Module
+module "compute" {
+  source = "../../modules/compute"
+
+  environment        = var.environment
+  project_name       = var.project_name
+  vpc_id             = module.networking.vpc_id
+  public_subnet_ids  = module.networking.public_subnet_ids
+  private_subnet_ids = module.networking.private_subnet_ids
+
+  # ECS Configuration
+  enable_ecs = true
+
+  # Load Balancer
+  enable_load_balancer = true
+
+  # ECS Service
+  enable_ecs_service = true
+
+  # Service Discovery (disabled for staging)
+  enable_service_discovery = false
+
+  # Auto Scaling (disabled for staging)
+  enable_auto_scaling = false
+
+  # Security Groups
+  load_balancer_security_group_id = module.security.load_balancer_security_group_id
+  ecs_service_security_group_id   = module.security.app_security_group_id
+
+  # IAM Roles
+  ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
+  ecs_task_role_arn           = module.iam.app_role_arn
+
+  tags = local.common_tags
+}
 
 # Monitoring Module
 module "monitoring" {
