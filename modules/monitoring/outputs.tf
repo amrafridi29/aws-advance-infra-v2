@@ -97,6 +97,17 @@ output "dashboard_names" {
   ])
 }
 
+# ECS Log Group Outputs
+output "ecs_log_group_names" {
+  description = "List of ECS log group names"
+  value       = var.enable_ecs_log_groups ? [for lg in aws_cloudwatch_log_group.ecs : lg.name] : []
+}
+
+output "ecs_log_group_arns" {
+  description = "List of ECS log group ARNs"
+  value       = var.enable_ecs_log_groups ? [for lg in aws_cloudwatch_log_group.ecs : lg.arn] : []
+}
+
 # Monitoring Summary
 output "monitoring_summary" {
   description = "Summary of the monitoring infrastructure"
@@ -106,6 +117,7 @@ output "monitoring_summary" {
     cloudtrail_enabled        = var.enable_cloudtrail
     alarms_enabled            = var.enable_alarms
     dashboards_enabled        = var.enable_dashboards
+    ecs_log_groups_enabled    = var.enable_ecs_log_groups
     sns_topic_created         = var.create_sns_topic
     flow_log_retention_days   = var.flow_log_retention_days
     log_retention_days        = var.log_retention_days

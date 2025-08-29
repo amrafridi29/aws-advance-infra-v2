@@ -227,6 +227,16 @@ module "monitoring" {
   enable_alarms     = false
   enable_dashboards = false
 
+  # ECS Log Groups (enabled for staging)
+  enable_ecs_log_groups = true
+  ecs_log_groups = [
+    {
+      name              = "/ecs/${var.project_name}-${var.environment}-task"
+      retention_in_days = 7
+      kms_key_arn       = module.encryption.main_key_arn
+    }
+  ]
+
   tags = local.common_tags
 }
 

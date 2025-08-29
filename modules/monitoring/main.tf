@@ -268,6 +268,25 @@ resource "aws_cloudwatch_dashboard" "overview" {
       }
     ]
   })
+}
 
+# =============================================================================
+# ECS LOG GROUPS
+# =============================================================================
 
+# ECS Log Groups
+resource "aws_cloudwatch_log_group" "ecs" {
+  for_each = var.enable_ecs_log_groups ? { for idx, lg in var.ecs_log_groups : lg.name => lg } : {}
+
+  name              = each.value.name
+  retention_in_days = each.value.retention_in_days
+  kms_key_id        = each.value.kms_key_arn != "" ? each.value.kms_key_arn : null
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = each.value.name
+      Type = "ECS Log Group"
+    }
+  )
 }

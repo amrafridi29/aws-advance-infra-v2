@@ -129,6 +129,23 @@ variable "enable_dashboards" {
   default     = false
 }
 
+# ECS Log Groups Configuration
+variable "enable_ecs_log_groups" {
+  description = "Whether to create ECS log groups"
+  type        = bool
+  default     = false
+}
+
+variable "ecs_log_groups" {
+  description = "List of ECS log group configurations"
+  type = list(object({
+    name              = string
+    retention_in_days = number
+    kms_key_arn       = string
+  }))
+  default = []
+}
+
 variable "dashboard_names" {
   description = "List of dashboard names to create"
   type        = list(string)

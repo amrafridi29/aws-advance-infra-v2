@@ -106,16 +106,7 @@ output "auto_scaling_policy_arns" {
   ])
 }
 
-# CloudWatch Log Group Outputs
-output "ecs_log_group_name" {
-  description = "Name of the CloudWatch log group for ECS tasks"
-  value       = var.enable_ecs && var.enable_ecs_service ? aws_cloudwatch_log_group.ecs_tasks[0].name : null
-}
 
-output "ecs_log_group_arn" {
-  description = "ARN of the CloudWatch log group for ECS tasks"
-  value       = var.enable_ecs && var.enable_ecs_service ? aws_cloudwatch_log_group.ecs_tasks[0].arn : null
-}
 
 # Compute Summary
 output "compute_summary" {

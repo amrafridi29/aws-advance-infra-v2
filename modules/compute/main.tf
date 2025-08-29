@@ -376,22 +376,4 @@ resource "aws_appautoscaling_policy" "ecs_memory_policy" {
   }
 }
 
-# =============================================================================
-# CLOUDWATCH LOG GROUP
-# =============================================================================
 
-# CloudWatch Log Group for ECS Tasks
-resource "aws_cloudwatch_log_group" "ecs_tasks" {
-  count = var.enable_ecs && var.enable_ecs_service ? 1 : 0
-
-  name              = "/ecs/${local.ecs_task_definition_family}"
-  retention_in_days = 7
-
-  tags = merge(
-    local.common_tags,
-    {
-      Name = "/ecs/${local.ecs_task_definition_family}"
-      Type = "CloudWatch Log Group"
-    }
-  )
-}
