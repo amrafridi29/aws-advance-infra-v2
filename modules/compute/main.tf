@@ -11,7 +11,6 @@ locals {
   ecs_cluster_name               = var.ecs_cluster_name != "" ? var.ecs_cluster_name : "${var.project_name}-${var.environment}-cluster"
   ecs_service_name               = var.ecs_service_name != "" ? var.ecs_service_name : "${var.project_name}-${var.environment}-service"
   ecs_task_definition_family     = var.ecs_task_definition_family != "" ? var.ecs_task_definition_family : "${var.project_name}-${var.environment}-task"
-  ecs_container_name             = var.ecs_container_name != "" ? var.ecs_container_name : "${var.project_name}-${var.environment}-container"
   service_discovery_namespace    = var.service_discovery_namespace != "" ? var.service_discovery_namespace : "${var.project_name}.${var.environment}.local"
   service_discovery_service_name = var.service_discovery_service_name != "" ? var.service_discovery_service_name : "${var.project_name}-${var.environment}-service"
 
@@ -145,16 +144,56 @@ resource "aws_ecs_task_definition" "main" {
   execution_role_arn       = var.ecs_task_execution_role_arn != "" ? var.ecs_task_execution_role_arn : null
   task_role_arn            = var.ecs_task_role_arn != "" ? var.ecs_task_role_arn : null
 
+
+
+  # Volumes
+  dynamic "volume" {
+    for_each = var.volumes
+    content {
+      name = volume.value.name
+      dynamic "efs_volume_configuration" {
+        for_each = volume.value.efs_volume_configuration != null ? [volume.value.efs_volume_configuration] : []
+        content {
+          file_system_id          = efs_volume_configuration.value.file_system_id
+          root_directory          = efs_volume_configuration.value.root_directory
+          transit_encryption      = efs_volume_configuration.value.transit_encryption
+          transit_encryption_port = efs_volume_configuration.value.transit_encryption_port
+        }
+      }
+      dynamic "docker_volume_configuration" {
+        for_each = volume.value.docker_volume_configuration != null ? [volume.value.docker_volume_configuration] : []
+        content {
+          scope       = docker_volume_configuration.value.scope
+          driver      = docker_volume_configuration.value.driver
+          driver_opts = docker_volume_configuration.value.driver_opts
+          labels      = docker_volume_configuration.value.labels
+        }
+      }
+    }
+  }
+
   container_definitions = jsonencode([
-    {
-      name  = local.ecs_container_name
-      image = var.ecs_container_image
+    for container in var.containers : {
+      name  = container.name
+      image = container.image
       portMappings = [
         {
-          containerPort = var.ecs_container_port
-          protocol      = "tcp"
+          containerPort = container.port
+          protocol      = container.protocol
         }
       ]
+      environment = container.environment
+      secrets     = container.secrets
+
+      # Health Check (only if configured)
+      healthCheck = container.health_check != null ? {
+        command     = container.health_check.command
+        interval    = container.health_check.interval
+        timeout     = container.health_check.timeout
+        retries     = container.health_check.retries
+        startPeriod = container.health_check.startPeriod
+      } : null
+
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -163,7 +202,16 @@ resource "aws_ecs_task_definition" "main" {
           awslogs-stream-prefix = "ecs"
         }
       }
-      essential = true
+      essential = container.essential
+      cpu       = container.cpu
+      memory    = container.memory
+      mountPoints = [
+        for mount in var.mount_points : {
+          sourceVolume  = mount.sourceVolume
+          containerPath = mount.containerPath
+          readOnly      = mount.readOnly
+        }
+      ]
     }
   ])
 
@@ -195,6 +243,22 @@ resource "aws_ecs_service" "main" {
     security_groups  = var.ecs_service_security_group_id != "" ? [var.ecs_service_security_group_id] : []
     assign_public_ip = false
   }
+
+  # Health Check Configuration
+  health_check_grace_period_seconds = 60
+
+  # Load Balancer Integration
+  dynamic "load_balancer" {
+    for_each = var.enable_load_balancer_integration && var.target_group_arn != "" ? [1] : []
+    content {
+      target_group_arn = var.target_group_arn
+      container_name   = var.containers[0].name
+      container_port   = var.containers[0].port
+    }
+  }
+
+  # ECS Exec Configuration
+  enable_execute_command = var.enable_execute_command
 
   dynamic "service_registries" {
     for_each = var.enable_service_discovery ? [1] : []
@@ -261,6 +325,25 @@ resource "aws_appautoscaling_policy" "ecs_memory_policy" {
     }
     target_value = var.target_memory_utilization
   }
+}
+
+
+
+# Scheduled Auto Scaling
+resource "aws_appautoscaling_scheduled_action" "ecs_scheduled_scaling" {
+  for_each = var.enable_auto_scaling && var.enable_ecs_service ? { for idx, schedule in var.scheduled_scaling : schedule.schedule => schedule } : {}
+
+  name               = "${local.name_prefix}-scheduled-scaling-${each.key}"
+  service_namespace  = aws_appautoscaling_target.ecs_target[0].service_namespace
+  resource_id        = aws_appautoscaling_target.ecs_target[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target[0].scalable_dimension
+
+  scalable_target_action {
+    min_capacity = each.value.min_capacity
+    max_capacity = each.value.max_capacity
+  }
+
+  schedule = each.value.schedule
 }
 
 

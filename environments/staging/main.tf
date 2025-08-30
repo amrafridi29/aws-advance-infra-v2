@@ -186,16 +186,95 @@ module "compute" {
   # ECS Configuration
   enable_ecs = true
 
-
+  # ECS Cluster Settings
+  ecs_cluster_settings = {
+    container_insights = true
+    default_capacity_provider_strategy = [
+      {
+        capacity_provider = "FARGATE"
+        weight            = 1
+        base              = 0
+      }
+    ]
+  }
 
   # ECS Service
   enable_ecs_service = true
 
+  # ECS Task Configuration
+  ecs_task_cpu    = 256 # 0.25 vCPU
+  ecs_task_memory = 512 # 512 MiB
+
+  # Advanced ECS Container Configuration
+  containers = [
+    {
+      name      = "web-app"
+      image     = "nginx:alpine"
+      port      = 80
+      protocol  = "tcp"
+      essential = true
+      environment = [
+        {
+          name  = "ENVIRONMENT"
+          value = "staging"
+        },
+        {
+          name  = "APP_VERSION"
+          value = "1.0.0"
+        }
+      ]
+      health_check = {
+        command     = ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 60
+      }
+    },
+    {
+      name      = "sidecar-cache"
+      image     = "redis:alpine"
+      port      = 6379
+      protocol  = "tcp"
+      essential = false
+      cpu       = 128
+      memory    = 256
+    }
+  ]
+
+  # ECS Service Configuration
+  ecs_desired_count = 1
+
+  # Load Balancer Integration
+  enable_load_balancer_integration = true
+  target_group_arn                 = module.networking.target_group_arn
+
+  # Enable ECS Exec for debugging
+  enable_execute_command = true
+
   # Service Discovery (disabled for staging)
   enable_service_discovery = false
 
-  # Auto Scaling (disabled for staging)
-  enable_auto_scaling = false
+  # Advanced Auto Scaling Configuration
+  enable_auto_scaling = true
+  min_capacity        = 1
+  max_capacity        = 3
+
+
+
+  # Scheduled scaling for business hours
+  scheduled_scaling = [
+    {
+      schedule     = "cron(0 8 * * ? *)" # 8 AM daily
+      min_capacity = 2
+      max_capacity = 4
+    },
+    {
+      schedule     = "cron(0 18 * * ? *)" # 6 PM daily
+      min_capacity = 1
+      max_capacity = 2
+    }
+  ]
 
   # Security Groups
   ecs_service_security_group_id = module.security.app_security_group_id
@@ -235,7 +314,7 @@ module "monitoring" {
     {
       name              = "/ecs/${var.project_name}-${var.environment}-task"
       retention_in_days = 7
-      kms_key_arn       = module.encryption.main_key_arn
+      kms_key_arn       = "" # Disable KMS encryption for staging to avoid permission issues
     }
   ]
 

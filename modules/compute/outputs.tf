@@ -86,8 +86,13 @@ output "compute_summary" {
     ecs_service_enabled         = var.enable_ecs && var.enable_ecs_service
     service_discovery_enabled   = var.enable_service_discovery
     auto_scaling_enabled        = var.enable_auto_scaling && var.enable_ecs_service
+    load_balancer_integration   = var.enable_load_balancer_integration
+    advanced_containers         = length(var.containers) > 0
+    volumes_enabled             = length(var.volumes) > 0
+    scheduled_scaling_rules     = length(var.scheduled_scaling)
     ecs_cluster_name            = var.enable_ecs ? aws_ecs_cluster.main[0].name : null
     ecs_service_name            = var.enable_ecs && var.enable_ecs_service ? aws_ecs_service.main[0].name : null
     service_discovery_namespace = var.enable_service_discovery ? aws_service_discovery_private_dns_namespace.main[0].name : null
+    container_count             = length(var.containers)
   }
 }

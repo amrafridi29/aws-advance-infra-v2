@@ -50,21 +50,9 @@ variable "ecs_cluster_settings" {
   description = "ECS cluster settings"
   type = object({
     container_insights = bool
-    default_capacity_provider_strategy = list(object({
-      capacity_provider = string
-      weight            = number
-      base              = number
-    }))
   })
   default = {
     container_insights = true
-    default_capacity_provider_strategy = [
-      {
-        capacity_provider = "FARGATE"
-        weight            = 1
-        base              = 0
-      }
-    ]
   }
 }
 
@@ -113,23 +101,7 @@ variable "ecs_task_role_arn" {
   default     = ""
 }
 
-variable "ecs_container_name" {
-  description = "Name for the ECS container"
-  type        = string
-  default     = ""
-}
 
-variable "ecs_container_image" {
-  description = "Docker image for the ECS container"
-  type        = string
-  default     = "nginx:alpine"
-}
-
-variable "ecs_container_port" {
-  description = "Port exposed by the ECS container"
-  type        = number
-  default     = 80
-}
 
 variable "ecs_desired_count" {
   description = "Desired number of ECS tasks"
@@ -141,6 +113,113 @@ variable "ecs_service_security_group_id" {
   description = "ID of the ECS service security group"
   type        = string
   default     = ""
+}
+
+variable "health_check_grace_period_seconds" {
+  description = "Grace period for health checks in seconds"
+  type        = number
+  default     = 60
+}
+
+# Load Balancer Integration (Optional)
+variable "enable_load_balancer_integration" {
+  description = "Whether to integrate with load balancer from networking module"
+  type        = bool
+  default     = false
+}
+
+variable "target_group_arn" {
+  description = "ARN of the target group from networking module"
+  type        = string
+  default     = ""
+}
+
+# Advanced Container Configuration
+variable "containers" {
+  description = "List of containers to run in the ECS task"
+  type = list(object({
+    name      = string
+    image     = string
+    port      = number
+    protocol  = string
+    essential = bool
+    cpu       = optional(number)
+    memory    = optional(number)
+    environment = optional(list(object({
+      name  = string
+      value = string
+    })), [])
+    secrets = optional(list(object({
+      name      = string
+      valueFrom = string
+    })), [])
+    health_check = optional(object({
+      command     = list(string)
+      interval    = number
+      timeout     = number
+      retries     = number
+      startPeriod = number
+    }))
+    log_configuration = optional(object({
+      log_driver = string
+      options    = map(string)
+    }))
+  }))
+  default = []
+  validation {
+    condition     = length(var.containers) > 0
+    error_message = "At least one container must be specified in the containers list."
+  }
+}
+
+variable "volumes" {
+  description = "List of volumes to attach to the ECS task"
+  type = list(object({
+    name = string
+    efs_volume_configuration = optional(object({
+      file_system_id          = string
+      root_directory          = string
+      transit_encryption      = optional(string)
+      transit_encryption_port = optional(number)
+    }))
+    docker_volume_configuration = optional(object({
+      scope       = string
+      driver      = string
+      driver_opts = optional(map(string))
+      labels      = optional(map(string))
+    }))
+  }))
+  default = []
+}
+
+variable "mount_points" {
+  description = "List of mount points for volumes"
+  type = list(object({
+    sourceVolume  = string
+    containerPath = string
+    readOnly      = bool
+  }))
+  default = []
+}
+
+
+
+variable "enable_execute_command" {
+  description = "Whether to enable ECS Exec for debugging"
+  type        = bool
+  default     = false
+}
+
+
+
+variable "scheduled_scaling" {
+  description = "Scheduled auto scaling rules"
+  type = list(object({
+    schedule     = string
+    min_capacity = number
+    max_capacity = number
+  }))
+  default = []
 }
 
 # Service Discovery Configuration

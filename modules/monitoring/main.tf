@@ -280,7 +280,7 @@ resource "aws_cloudwatch_log_group" "ecs" {
 
   name              = each.value.name
   retention_in_days = each.value.retention_in_days
-  kms_key_id        = each.value.kms_key_arn != "" ? each.value.kms_key_arn : null
+  kms_key_id        = each.value.kms_key_arn != "" && each.value.kms_key_arn != null ? each.value.kms_key_arn : null
 
   tags = merge(
     local.common_tags,
@@ -289,4 +289,9 @@ resource "aws_cloudwatch_log_group" "ecs" {
       Type = "ECS Log Group"
     }
   )
+
+  # Add lifecycle to handle KMS key changes gracefully
+  lifecycle {
+    ignore_changes = [kms_key_id]
+  }
 }
