@@ -33,6 +33,23 @@ output "encryption_outputs" {
   value       = module.encryption
 }
 
+# ECR Module Outputs
+output "ecr_outputs" {
+  description = "ECR module outputs"
+  value       = module.ecr
+}
+
+# ECR Repository URLs (for easy access)
+output "frontend_repository_url" {
+  description = "Frontend ECR repository URL"
+  value       = module.ecr.frontend_repository_url
+}
+
+output "backend_repository_url" {
+  description = "Backend ECR repository URL"
+  value       = module.ecr.backend_repository_url
+}
+
 # Security Module Outputs
 output "security_outputs" {
   description = "Security module outputs"

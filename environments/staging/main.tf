@@ -119,6 +119,25 @@ module "encryption" {
   tags = local.common_tags
 }
 
+# ECR Module
+module "ecr" {
+  source = "../../modules/ecr"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  # Enable both repositories
+  enable_frontend_repository = true
+  enable_backend_repository  = true
+
+  # Features
+  enable_image_scanning     = true
+  enable_lifecycle_policies = true
+  max_image_count           = 10
+
+  tags = local.common_tags
+}
+
 # Security Module
 module "security" {
   source = "../../modules/security"
