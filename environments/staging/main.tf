@@ -79,9 +79,22 @@ module "networking" {
   enable_nat_gateway = var.enable_nat_gateway
   single_nat_gateway = var.single_nat_gateway
 
-  # Load Balancer
+  # Load Balancer Configuration
   enable_load_balancer            = true
+  load_balancer_name              = "aws-advance-infra-staging-alb"
+  enable_https                    = false
+  certificate_arn                 = ""
   load_balancer_security_group_id = module.security.load_balancer_security_group_id
+
+  # Target Group Configuration
+  target_group_name     = "aws-advance-infra-staging-tg"
+  target_group_port     = 80
+  target_group_protocol = "HTTP"
+  health_check_path     = "/"
+  health_check_interval = 30
+  health_check_timeout  = 5
+  healthy_threshold     = 2
+  unhealthy_threshold   = 2
 
   # Tags
   tags = local.common_tags
@@ -115,45 +128,6 @@ module "encryption" {
 
   # Basic encryption
   enable_kms_encryption = true
-
-  tags = local.common_tags
-}
-
-# ECR Module
-module "ecr" {
-  source = "../../modules/ecr"
-
-  environment  = var.environment
-  project_name = var.project_name
-
-  # Enable both repositories
-  enable_frontend_repository = true
-  enable_backend_repository  = true
-
-  # Features
-  enable_image_scanning     = true
-  enable_lifecycle_policies = true
-  max_image_count           = 10
-
-  tags = local.common_tags
-}
-
-# Security Module
-module "security" {
-  source = "../../modules/security"
-
-  environment  = var.environment
-  project_name = var.project_name
-  vpc_id       = module.networking.vpc_id
-
-  # Security Groups
-  create_security_groups = true
-  allowed_cidr_blocks    = var.allowed_cidr_blocks
-  enable_ssh_access      = false # Disable SSH for staging security
-  enable_http_access     = true  # Enable HTTP for staging
-  enable_https_access    = true  # Enable HTTPS for staging
-  enable_database_access = true  # Enable database access
-  database_port          = 3306  # Default MySQL port
 
   tags = local.common_tags
 }
@@ -192,6 +166,46 @@ module "storage" {
   tags = local.common_tags
 }
 
+# ECR Module
+module "ecr" {
+  source = "../../modules/ecr"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  # Enable both repositories
+  enable_frontend_repository = true
+  enable_backend_repository  = true
+
+  # Features
+  enable_image_scanning     = true
+  enable_lifecycle_policies = true
+  max_image_count           = 10
+
+  # Tags
+  tags = local.common_tags
+}
+
+# Security Module
+module "security" {
+  source = "../../modules/security"
+
+  environment  = var.environment
+  project_name = var.project_name
+  vpc_id       = module.networking.vpc_id
+
+  # Security Groups
+  create_security_groups = true
+  allowed_cidr_blocks    = var.allowed_cidr_blocks
+  enable_ssh_access      = false # Disable SSH for staging security
+  enable_http_access     = true  # Enable HTTP for staging
+  enable_https_access    = true  # Enable HTTPS for staging
+  enable_database_access = true  # Enable database access
+  database_port          = 3306  # Default MySQL port
+
+  tags = local.common_tags
+}
+
 # Compute Module
 module "compute" {
   source = "../../modules/compute"
@@ -221,14 +235,14 @@ module "compute" {
   enable_ecs_service = true
 
   # ECS Task Configuration
-  ecs_task_cpu    = 256 # 0.25 vCPU
-  ecs_task_memory = 512 # 512 MiB
+  ecs_task_cpu    = 1024 # 1 vCPU for both containers
+  ecs_task_memory = 2048 # 2 GB for both containers
 
   # Advanced ECS Container Configuration
   containers = [
     {
-      name      = "web-app"
-      image     = "nginx:alpine"
+      name      = "frontend"
+      image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/aws-advance-infra-staging-frontend:latest"
       port      = 80
       protocol  = "tcp"
       essential = true
@@ -243,22 +257,38 @@ module "compute" {
         }
       ]
       health_check = {
-        command     = ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+        command     = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
         interval    = 30
         timeout     = 5
         retries     = 3
         startPeriod = 60
       }
-    },
-    {
-      name      = "sidecar-cache"
-      image     = "redis:alpine"
-      port      = 6379
-      protocol  = "tcp"
-      essential = false
-      cpu       = 128
-      memory    = 256
     }
+    # Backend container commented out temporarily - will add back when image is ready
+    # {
+    #   name      = "backend"
+    #   image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/aws-advance-infra-staging-backend:latest"
+    #   port      = 3001
+    #   protocol  = "tcp"
+    #   essential = true
+    #   environment = [
+    #     {
+    #       name  = "ENVIRONMENT"
+    #       value = "staging"
+    #     },
+    #     {
+    #       name  = "APP_VERSION"
+    #       value = "1.0.0"
+    #     }
+    #   ]
+    #   health_check = {
+    #     command     = ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+    #     interval    = 30
+    #     timeout     = 5
+    #     retries     = 3
+    #     startPeriod = 60
+    #   }
+    # }
   ]
 
   # ECS Service Configuration
@@ -300,7 +330,7 @@ module "compute" {
 
   # IAM Roles
   ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
-  ecs_task_role_arn           = module.iam.app_role_arn
+  ecs_task_role_arn           = module.iam.ecs_task_execution_role_arn # Temporarily use execution role to resolve validation
 
   tags = local.common_tags
 }
