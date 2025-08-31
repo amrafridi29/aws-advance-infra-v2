@@ -10,6 +10,18 @@ variable "environment" {
   type        = string
 }
 
+variable "custom_domain_names" {
+  description = "List of custom domain names (aliases) for the CloudFront distribution"
+  type        = list(string)
+  default     = []
+}
+
+variable "ssl_certificate_arn" {
+  description = "ARN of the SSL certificate for custom domains"
+  type        = string
+  default     = null
+}
+
 variable "origin_domain_name" {
   description = "Domain name of the origin (load balancer or S3 bucket)"
   type        = string

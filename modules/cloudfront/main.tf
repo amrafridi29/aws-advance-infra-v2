@@ -6,6 +6,9 @@ resource "aws_cloudfront_distribution" "main" {
   default_root_object = var.default_root_object
   price_class         = var.price_class
 
+  # Custom domain aliases
+  aliases = var.custom_domain_names
+
   # Origin configuration
   origin {
     domain_name = var.origin_domain_name
@@ -100,12 +103,12 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
-  # Viewer certificate
+  # Viewer certificate configuration
   viewer_certificate {
-    cloudfront_default_certificate = var.use_default_certificate
-    acm_certificate_arn            = var.acm_certificate_arn
-    ssl_support_method             = var.ssl_support_method
-    minimum_protocol_version       = var.minimum_protocol_version
+    cloudfront_default_certificate = length(var.custom_domain_names) == 0
+    acm_certificate_arn            = length(var.custom_domain_names) > 0 ? var.ssl_certificate_arn : null
+    ssl_support_method             = length(var.custom_domain_names) > 0 ? "sni-only" : null
+    minimum_protocol_version       = "TLSv1.2_2021"
   }
 
   # Custom error responses
