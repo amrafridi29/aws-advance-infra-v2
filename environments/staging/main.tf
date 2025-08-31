@@ -201,6 +201,10 @@ module "cloudfront" {
   origin_id          = "alb-origin"
   origin_type        = "alb"
 
+  # Custom domain configuration
+  custom_domain_names = ["staging.softradev.online"]
+  ssl_certificate_arn = "arn:aws:acm:us-east-1:398512629816:certificate/7d75a5f8-2b4b-4be3-9db1-72f0eb36a12e"
+
   # Performance settings
   compress    = true
   enable_ipv6 = true
@@ -213,7 +217,7 @@ module "cloudfront" {
 
   # Security settings
   enable_security_headers = true
-  viewer_protocol_policy  = "allow-all" # Changed from "redirect-to-https" for HTTP staging
+  viewer_protocol_policy  = "allow-all"
 
   # Custom cache behaviors for static assets
   custom_cache_behaviors = [
@@ -228,7 +232,7 @@ module "cloudfront" {
       default_ttl            = 604800   # 1 week
       max_ttl                = 31536000 # 1 year
       compress               = true
-      viewer_protocol_policy = "allow-all" # Changed for HTTP staging
+      viewer_protocol_policy = "allow-all"
     },
     {
       path_pattern           = "/*.js"
@@ -241,7 +245,7 @@ module "cloudfront" {
       default_ttl            = 604800   # 1 week
       max_ttl                = 31536000 # 1 year
       compress               = true
-      viewer_protocol_policy = "allow-all" # Changed for HTTP staging
+      viewer_protocol_policy = "allow-all"
     },
     {
       path_pattern           = "/*.css"
@@ -254,7 +258,7 @@ module "cloudfront" {
       default_ttl            = 604800   # 1 week
       max_ttl                = 31536000 # 1 year
       compress               = true
-      viewer_protocol_policy = "allow-all" # Changed for HTTP staging
+      viewer_protocol_policy = "allow-all"
     }
   ]
 
@@ -455,6 +459,35 @@ module "monitoring" {
   ]
 
   tags = local.common_tags
+}
+
+# Route 53 Module
+module "route53" {
+  source = "../../modules/route53"
+
+  environment  = var.environment
+  project_name = var.project_name
+  domain_name  = "softradev.online"
+  subdomain    = "staging"
+
+  # CloudFront configuration
+  create_cloudfront_record = true
+  cloudfront_domain_name   = module.cloudfront.distribution_domain_name
+
+  # Load balancer configuration (optional)
+  create_load_balancer_record = false
+
+  # SSL Certificate validation CNAME record
+  cname_records = {
+    "_e4bd04d768df5105ddd28bc19aed8605" = {
+      value = "_2d40c1f91e588867fa6b7009f5658486.xlfgrmvvlj.acm-validations.aws"
+      ttl   = "300"
+    }
+  }
+
+  tags = local.common_tags
+
+  depends_on = [module.cloudfront]
 }
 
 # Outputs are defined in outputs.tf

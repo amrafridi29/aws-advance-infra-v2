@@ -101,3 +101,20 @@ output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID"
   value       = module.cloudfront.distribution_id
 }
+
+# Route 53 Module Outputs
+output "route53_outputs" {
+  description = "Route 53 module outputs"
+  value       = module.route53
+}
+
+# Route 53 Domain Information (for easy access)
+output "custom_domain_name" {
+  description = "Custom domain name for staging environment"
+  value       = module.route53.full_domain_name
+}
+
+output "name_servers" {
+  description = "Name servers for DNS configuration"
+  value       = module.route53.name_servers
+}
