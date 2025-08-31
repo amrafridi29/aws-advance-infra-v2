@@ -42,6 +42,12 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# Load balancer data source for CloudFront
+data "aws_lb" "staging" {
+  name       = "aws-advance-infra-staging-alb"
+  depends_on = [module.networking]
+}
+
 # Local values for consistent naming and configuration
 locals {
   environment = var.environment
@@ -184,6 +190,87 @@ module "ecr" {
 
   # Tags
   tags = local.common_tags
+}
+
+# CloudFront Module
+module "cloudfront" {
+  source = "../../modules/cloudfront"
+
+  environment        = var.environment
+  origin_domain_name = data.aws_lb.staging.dns_name
+  origin_id          = "alb-origin"
+  origin_type        = "alb"
+
+  # Performance settings
+  compress    = true
+  enable_ipv6 = true
+  price_class = "PriceClass_100" # North America and Europe
+
+  # Cache settings
+  min_ttl     = 0    # No cache for dynamic content
+  default_ttl = 300  # 5 minutes default
+  max_ttl     = 3600 # 1 hour maximum
+
+  # Security settings
+  enable_security_headers = true
+  viewer_protocol_policy  = "allow-all" # Changed from "redirect-to-https" for HTTP staging
+
+  # Custom cache behaviors for static assets
+  custom_cache_behaviors = [
+    {
+      path_pattern           = "/assets/*"
+      allowed_methods        = ["GET", "HEAD"]
+      cached_methods         = ["GET", "HEAD"]
+      target_origin_id       = "alb-origin"
+      forward_query_string   = false
+      forward_cookies        = "none"
+      min_ttl                = 86400    # 1 day
+      default_ttl            = 604800   # 1 week
+      max_ttl                = 31536000 # 1 year
+      compress               = true
+      viewer_protocol_policy = "allow-all" # Changed for HTTP staging
+    },
+    {
+      path_pattern           = "/*.js"
+      allowed_methods        = ["GET", "HEAD"]
+      cached_methods         = ["GET", "HEAD"]
+      target_origin_id       = "alb-origin"
+      forward_query_string   = false
+      forward_cookies        = "none"
+      min_ttl                = 86400    # 1 day
+      default_ttl            = 604800   # 1 week
+      max_ttl                = 31536000 # 1 year
+      compress               = true
+      viewer_protocol_policy = "allow-all" # Changed for HTTP staging
+    },
+    {
+      path_pattern           = "/*.css"
+      allowed_methods        = ["GET", "HEAD"]
+      cached_methods         = ["GET", "HEAD"]
+      target_origin_id       = "alb-origin"
+      forward_query_string   = false
+      forward_cookies        = "none"
+      min_ttl                = 86400    # 1 day
+      default_ttl            = 604800   # 1 week
+      max_ttl                = 31536000 # 1 year
+      compress               = true
+      viewer_protocol_policy = "allow-all" # Changed for HTTP staging
+    }
+  ]
+
+  # Custom error responses for SPA
+  custom_error_responses = [
+    {
+      error_code            = 404
+      response_code         = "200"
+      response_page_path    = "/index.html"
+      error_caching_min_ttl = 300
+    }
+  ]
+
+  tags = local.common_tags
+
+  depends_on = [module.networking, data.aws_lb.staging]
 }
 
 # Security Module
