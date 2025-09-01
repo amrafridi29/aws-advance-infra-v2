@@ -48,6 +48,16 @@ data "aws_lb" "staging" {
   depends_on = [module.networking]
 }
 
+# Data sources to fetch manually created Parameter Store parameters
+data "aws_ssm_parameter" "backend_env_vars" {
+  for_each = toset([
+    "DB_HOST",
+    "DB_PORT",
+  ])
+
+  name = "/advance-infra/staging/backend/${each.value}"
+}
+
 # Local values for consistent naming and configuration
 locals {
   environment = var.environment
@@ -387,6 +397,16 @@ module "compute" {
             name  = "APP_VERSION"
             value = "1.0.0"
           }
+        ]
+        secrets = [
+          {
+            name      = "DB_HOST"
+            valueFrom = data.aws_ssm_parameter.backend_env_vars["DB_HOST"].arn
+          },
+          {
+            name      = "DB_PORT"
+            valueFrom = data.aws_ssm_parameter.backend_env_vars["DB_PORT"].arn
+          },
         ]
         health_check = {
           command     = ["CMD-SHELL", "curl -f http://localhost:3001/api/health || exit 1"]
