@@ -262,6 +262,31 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# ECS Task Execution SSM Parameter Access Policy
+resource "aws_iam_role_policy" "ecs_task_execution_ssm" {
+  count = var.create_ecs_task_execution_role ? 1 : 0
+  name  = "${local.name_prefix}-ecs-task-execution-ssm-policy"
+  role  = aws_iam_role.ecs_task_execution[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameters",
+          "ssm:GetParameter",
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = [
+          "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/*",
+          "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:${var.project_name}/${var.environment}/*"
+        ]
+      }
+    ]
+  })
+}
+
 # =============================================================================
 # CUSTOM IAM POLICIES
 # =============================================================================
