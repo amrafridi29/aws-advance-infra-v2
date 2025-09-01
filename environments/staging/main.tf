@@ -57,7 +57,7 @@ locals {
 
   # Container configuration flags
   enable_frontend_container = true
-  enable_backend_container  = false # Set to true when backend image is ready
+  enable_backend_container  = true # Set to true when backend image is ready
 
   # Custom domain configuration
   custom_domains = var.custom_domains
@@ -231,6 +231,19 @@ module "cloudfront" {
   # Custom cache behaviors for static assets
   custom_cache_behaviors = [
     {
+      path_pattern           = "/api/*"
+      allowed_methods        = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+      cached_methods         = ["GET", "HEAD"]
+      target_origin_id       = "alb-origin"
+      forward_query_string   = true
+      forward_cookies        = "all"
+      min_ttl                = 0 # No cache for API calls
+      default_ttl            = 0 # No cache for API calls
+      max_ttl                = 0 # No cache for API calls
+      compress               = true
+      viewer_protocol_policy = "allow-all"
+    },
+    {
       path_pattern           = "/assets/*"
       allowed_methods        = ["GET", "HEAD"]
       cached_methods         = ["GET", "HEAD"]
@@ -376,7 +389,7 @@ module "compute" {
           }
         ]
         health_check = {
-          command     = ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+          command     = ["CMD-SHELL", "curl -f http://localhost:3001/api/health || exit 1"]
           interval    = 30
           timeout     = 5
           retries     = 3
