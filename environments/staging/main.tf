@@ -55,6 +55,10 @@ locals {
   # Availability zones (limit to 2 for cost optimization in staging)
   azs = slice(data.aws_availability_zones.available.names, 0, 2)
 
+  # Container configuration flags
+  enable_frontend_container = true
+  enable_backend_container  = false # Set to true when backend image is ready
+
   # Common tags for all resources
   common_tags = {
     Environment = var.environment
@@ -202,7 +206,8 @@ module "cloudfront" {
   origin_type        = "alb"
 
   # Custom domain configuration (temporarily disabled until manual SSL certificate is created)
-  custom_domain_names = []
+  custom_domain_names = ["staging.softradev.online", "www.staging.softradev.online"]
+  ssl_certificate_arn = "arn:aws:acm:us-east-1:398512629816:certificate/ccdd11f8-4a46-4662-9faa-378b8a88499b"
 
   # Performance settings
   compress    = true
@@ -300,26 +305,16 @@ module "security" {
 module "compute" {
   source = "../../modules/compute"
 
-  environment        = var.environment
-  project_name       = var.project_name
-  vpc_id             = module.networking.vpc_id
+  environment  = var.environment
+  project_name = var.project_name
+  vpc_id       = module.networking.vpc_id
+
+  # Subnet Configuration
   public_subnet_ids  = module.networking.public_subnet_ids
   private_subnet_ids = module.networking.private_subnet_ids
 
   # ECS Configuration
   enable_ecs = true
-
-  # ECS Cluster Settings
-  ecs_cluster_settings = {
-    container_insights = true
-    default_capacity_provider_strategy = [
-      {
-        capacity_provider = "FARGATE"
-        weight            = 1
-        base              = 0
-      }
-    ]
-  }
 
   # ECS Service
   enable_ecs_service = true
@@ -329,57 +324,62 @@ module "compute" {
   ecs_task_memory = 2048 # 2 GB for both containers
 
   # Advanced ECS Container Configuration
-  containers = [
-    {
-      name      = "frontend"
-      image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/aws-advance-infra-staging-frontend:latest"
-      port      = 80
-      protocol  = "tcp"
-      essential = true
-      environment = [
-        {
-          name  = "ENVIRONMENT"
-          value = "staging"
-        },
-        {
-          name  = "APP_VERSION"
-          value = "1.0.0"
+  containers = concat(
+    # Frontend container (always enabled)
+    local.enable_frontend_container ? [
+      {
+        name      = "frontend"
+        image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/aws-advance-infra-staging-frontend:latest"
+        port      = 80
+        protocol  = "tcp"
+        essential = true
+        environment = [
+          {
+            name  = "ENVIRONMENT"
+            value = "staging"
+          },
+          {
+            name  = "APP_VERSION"
+            value = "1.0.0"
+          }
+        ]
+        health_check = {
+          command     = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
+          interval    = 30
+          timeout     = 5
+          retries     = 3
+          startPeriod = 60
         }
-      ]
-      health_check = {
-        command     = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 60
       }
-    }
-    # Backend container commented out temporarily - will add back when image is ready
-    # {
-    #   name      = "backend"
-    #   image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/aws-advance-infra-staging-backend:latest"
-    #   port      = 3001
-    #   protocol  = "tcp"
-    #   essential = true
-    #   environment = [
-    #     {
-    #       name  = "ENVIRONMENT"
-    #       value = "staging"
-    #     },
-    #     {
-    #       name  = "APP_VERSION"
-    #       value = "1.0.0"
-    #     }
-    #   ]
-    #   health_check = {
-    #     command     = ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
-    #     interval    = 30
-    #     timeout     = 5
-    #     retries     = 3
-    #     startPeriod = 60
-    #   }
-    # }
-  ]
+    ] : [],
+    # Backend container (optional)
+    local.enable_backend_container ? [
+      {
+        name      = "backend"
+        image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/aws-advance-infra-staging-backend:latest"
+        port      = 3001
+        protocol  = "tcp"
+        essential = false # Make backend non-essential so frontend can run without it
+        environment = [
+          {
+            name  = "ENVIRONMENT"
+            value = "staging"
+          },
+          {
+            name  = "APP_VERSION"
+            value = "1.0.0"
+          }
+        ]
+        health_check = {
+          command     = ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+          interval    = 30
+          timeout     = 5
+          retries     = 3
+          startPeriod = 60
+        }
+      }
+    ] : []
+  )
 
   # ECS Service Configuration
   ecs_desired_count = 1
@@ -469,14 +469,24 @@ module "route53" {
   domain_name  = "softradev.online"
   subdomain    = "staging"
 
-  # CloudFront configuration (disabled until manual SSL certificate is created)
-  create_cloudfront_record = false
-  cloudfront_domain_name   = ""
+  # CloudFront configuration (enabled with custom domain)
+  create_cloudfront_record = true
+  cloudfront_domain_name   = module.cloudfront.distribution_domain_name
 
   # Load balancer configuration (optional)
   create_load_balancer_record = false
 
+  # CNAME records for additional subdomains
+  cname_records = {
+    "www.staging" = {
+      value = "staging.softradev.online"
+      ttl   = "300"
+    }
+  }
+
   tags = local.common_tags
+
+  depends_on = [module.cloudfront]
 }
 
 # Outputs are defined in outputs.tf
