@@ -44,18 +44,23 @@ data "aws_availability_zones" "available" {
 
 # Load balancer data source for CloudFront
 data "aws_lb" "staging" {
-  name       = "aws-advance-infra-staging-alb"
+  name       = "${var.project_name}-${var.environment}-alb"
   depends_on = [module.networking]
 }
 
-# Data sources to fetch manually created Parameter Store parameters
-data "aws_ssm_parameter" "backend_env_vars" {
+# SSM Parameter Store resources for backend environment variables
+resource "aws_ssm_parameter" "backend_env_vars" {
   for_each = toset([
+    "PORT",
     "DB_HOST",
     "DB_PORT",
   ])
 
-  name = "/advance-infra/staging/backend/${each.value}"
+  name  = "/${var.project_name}/${var.environment}/backend/${each.value}"
+  type  = "String"
+  value = each.value
+
+  tags = local.common_tags
 }
 
 # Local values for consistent naming and configuration
@@ -106,13 +111,13 @@ module "networking" {
 
   # Load Balancer Configuration
   enable_load_balancer            = true
-  load_balancer_name              = "aws-advance-infra-staging-alb"
+  load_balancer_name              = "${var.project_name}-${var.environment}-alb"
   enable_https                    = false
   certificate_arn                 = ""
   load_balancer_security_group_id = module.security.load_balancer_security_group_id
 
   # Target Group Configuration
-  target_group_name     = "aws-advance-infra-staging-tg"
+  target_group_name     = "${var.project_name}-${var.environment}-tg"
   target_group_port     = 80
   target_group_protocol = "HTTP"
   health_check_path     = "/"
@@ -215,6 +220,7 @@ module "ecr" {
 module "cloudfront" {
   source = "../../modules/cloudfront"
 
+  project_name       = var.project_name
   environment        = var.environment
   origin_domain_name = data.aws_lb.staging.dns_name
   origin_id          = "alb-origin"
@@ -222,7 +228,7 @@ module "cloudfront" {
 
   # Custom domain configuration (temporarily disabled until manual SSL certificate is created)
   custom_domain_names = local.custom_domains
-  ssl_certificate_arn = "arn:aws:acm:us-east-1:398512629816:certificate/ccdd11f8-4a46-4662-9faa-378b8a88499b"
+  ssl_certificate_arn = var.ssl_certificate_arn
 
   # Performance settings
   compress    = true
@@ -357,7 +363,7 @@ module "compute" {
     local.enable_frontend_container ? [
       {
         name      = "frontend"
-        image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/aws-advance-infra-staging-frontend:latest"
+        image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/${var.project_name}-${var.environment}-frontend:latest"
         port      = 80
         protocol  = "tcp"
         essential = true
@@ -384,7 +390,7 @@ module "compute" {
     local.enable_backend_container ? [
       {
         name      = "backend"
-        image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/aws-advance-infra-staging-backend:latest"
+        image     = "398512629816.dkr.ecr.us-east-2.amazonaws.com/${var.project_name}-${var.environment}-backend:latest"
         port      = 3001
         protocol  = "tcp"
         essential = false # Make backend non-essential so frontend can run without it
@@ -400,12 +406,16 @@ module "compute" {
         ]
         secrets = [
           {
+            name      = "PORT"
+            valueFrom = aws_ssm_parameter.backend_env_vars["PORT"].arn
+          },
+          {
             name      = "DB_HOST"
-            valueFrom = data.aws_ssm_parameter.backend_env_vars["DB_HOST"].arn
+            valueFrom = aws_ssm_parameter.backend_env_vars["DB_HOST"].arn
           },
           {
             name      = "DB_PORT"
-            valueFrom = data.aws_ssm_parameter.backend_env_vars["DB_PORT"].arn
+            valueFrom = aws_ssm_parameter.backend_env_vars["DB_PORT"].arn
           },
         ]
         health_check = {

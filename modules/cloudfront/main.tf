@@ -2,7 +2,7 @@
 resource "aws_cloudfront_distribution" "main" {
   enabled             = var.enabled
   is_ipv6_enabled     = var.enable_ipv6
-  comment             = "CloudFront distribution for ${var.environment} environment"
+  comment             = "CloudFront distribution for ${var.project_name}-${var.environment} environment"
   default_root_object = var.default_root_object
   price_class         = var.price_class
 
@@ -142,7 +142,7 @@ resource "aws_cloudfront_distribution" "main" {
 
   # Tags
   tags = merge(var.tags, {
-    Name        = "aws-advance-infra-${var.environment}-cloudfront"
+    Name        = "${var.project_name}-${var.environment}-cloudfront"
     Environment = var.environment
     Module      = "cloudfront"
   })
@@ -154,7 +154,7 @@ resource "aws_cloudfront_distribution" "main" {
 # Origin Access Control (only for S3 origins)
 resource "aws_cloudfront_origin_access_control" "main" {
   count                             = var.origin_type == "s3" ? 1 : 0
-  name                              = "aws-advance-infra-${var.environment}-oac"
+  name                              = "${var.project_name}-${var.environment}-oac"
   description                       = "Origin Access Control for ${var.environment} environment"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -164,7 +164,7 @@ resource "aws_cloudfront_origin_access_control" "main" {
 # CloudFront Function for Security Headers
 resource "aws_cloudfront_function" "security_headers" {
   count   = var.enable_security_headers ? 1 : 0
-  name    = "aws-advance-infra-${var.environment}-security-headers"
+  name    = "${var.project_name}-${var.environment}-security-headers"
   runtime = "cloudfront-js-1.0"
   comment = "Security headers function for ${var.environment} environment"
   publish = true
@@ -177,7 +177,7 @@ resource "aws_cloudfront_function" "security_headers" {
 # CloudFront Cache Policy
 resource "aws_cloudfront_cache_policy" "main" {
   count       = var.create_cache_policy ? 1 : 0
-  name        = "aws-advance-infra-${var.environment}-cache-policy"
+  name        = "${var.project_name}-${var.environment}-cache-policy"
   comment     = "Cache policy for ${var.environment} environment"
   default_ttl = var.default_ttl
   max_ttl     = var.max_ttl
@@ -202,7 +202,7 @@ resource "aws_cloudfront_cache_policy" "main" {
 # CloudFront Origin Request Policy
 resource "aws_cloudfront_origin_request_policy" "main" {
   count   = var.create_origin_request_policy ? 1 : 0
-  name    = "aws-advance-infra-${var.environment}-origin-request-policy"
+  name    = "${var.project_name}-${var.environment}-origin-request-policy"
   comment = "Origin request policy for ${var.environment} environment"
 
   cookies_config {

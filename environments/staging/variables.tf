@@ -174,3 +174,9 @@ variable "subdomain" {
   type        = string
   default     = "staging"
 }
+
+variable "ssl_certificate_arn" {
+  description = "ARN of the SSL certificate for custom domains"
+  type        = string
+  default     = null
+}
