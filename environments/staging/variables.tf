@@ -152,3 +152,25 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+# Custom domain configuration
+variable "custom_domains" {
+  description = "List of custom domains for CloudFront and Route 53"
+  type        = list(string)
+  default = [
+    "staging.softradev.online",
+    "www.staging.softradev.online"
+  ]
+}
+
+variable "base_domain" {
+  description = "Base domain name (e.g., softradev.online)"
+  type        = string
+  default     = "softradev.online"
+}
+
+variable "subdomain" {
+  description = "Subdomain name (e.g., staging)"
+  type        = string
+  default     = "staging"
+}

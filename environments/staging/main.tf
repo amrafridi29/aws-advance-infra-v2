@@ -59,6 +59,11 @@ locals {
   enable_frontend_container = true
   enable_backend_container  = false # Set to true when backend image is ready
 
+  # Custom domain configuration
+  custom_domains = var.custom_domains
+  base_domain    = var.base_domain
+  subdomain      = var.subdomain
+
   # Common tags for all resources
   common_tags = {
     Environment = var.environment
@@ -206,7 +211,7 @@ module "cloudfront" {
   origin_type        = "alb"
 
   # Custom domain configuration (temporarily disabled until manual SSL certificate is created)
-  custom_domain_names = ["staging.softradev.online", "www.staging.softradev.online"]
+  custom_domain_names = local.custom_domains
   ssl_certificate_arn = "arn:aws:acm:us-east-1:398512629816:certificate/ccdd11f8-4a46-4662-9faa-378b8a88499b"
 
   # Performance settings
@@ -466,18 +471,15 @@ module "route53" {
 
   environment  = var.environment
   project_name = var.project_name
-  domain_name  = "softradev.online"
-  subdomain    = "staging"
+  domain_name  = local.base_domain
+  subdomain    = local.subdomain
 
   # CloudFront configuration (enabled with custom domain)
   create_cloudfront_record = true
   cloudfront_domain_name   = module.cloudfront.distribution_domain_name
 
   # Multiple domains for CloudFront (both staging and www.staging)
-  cloudfront_domains = [
-    "staging.softradev.online",
-    "www.staging.softradev.online"
-  ]
+  cloudfront_domains = local.custom_domains
 
   # Load balancer configuration (optional)
   create_load_balancer_record = false
