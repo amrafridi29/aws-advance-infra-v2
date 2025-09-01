@@ -40,10 +40,13 @@ resource "aws_route53_zone" "main" {
 
 # A Record for CloudFront Distribution
 resource "aws_route53_record" "cloudfront" {
-  count = var.create_cloudfront_record ? 1 : 0
+  for_each = var.create_cloudfront_record ? toset(
+    length(var.cloudfront_domains) > 0 ? var.cloudfront_domains :
+    [var.subdomain != "" ? "${var.subdomain}.${var.domain_name}" : var.domain_name]
+  ) : []
 
   zone_id = var.hosted_zone_id != "" ? var.hosted_zone_id : aws_route53_zone.main[0].zone_id
-  name    = var.subdomain != "" ? "${var.subdomain}.${var.domain_name}" : var.domain_name
+  name    = each.value
   type    = "A"
 
   alias {

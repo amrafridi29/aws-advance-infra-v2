@@ -18,7 +18,12 @@ output "name_servers" {
 
 output "cloudfront_record_name" {
   description = "Name of the CloudFront A record"
-  value       = var.create_cloudfront_record ? aws_route53_record.cloudfront[0].name : null
+  value       = var.create_cloudfront_record && length(aws_route53_record.cloudfront) > 0 ? values(aws_route53_record.cloudfront)[0].name : null
+}
+
+output "cloudfront_record_names" {
+  description = "Names of all CloudFront A records"
+  value       = [for record in aws_route53_record.cloudfront : record.name]
 }
 
 output "load_balancer_record_name" {

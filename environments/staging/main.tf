@@ -473,16 +473,14 @@ module "route53" {
   create_cloudfront_record = true
   cloudfront_domain_name   = module.cloudfront.distribution_domain_name
 
+  # Multiple domains for CloudFront (both staging and www.staging)
+  cloudfront_domains = [
+    "staging.softradev.online",
+    "www.staging.softradev.online"
+  ]
+
   # Load balancer configuration (optional)
   create_load_balancer_record = false
-
-  # CNAME records for additional subdomains
-  cname_records = {
-    "www.staging" = {
-      value = "staging.softradev.online"
-      ttl   = "300"
-    }
-  }
 
   tags = local.common_tags
 

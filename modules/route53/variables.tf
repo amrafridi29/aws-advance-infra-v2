@@ -43,6 +43,12 @@ variable "subdomain" {
   default     = ""
 }
 
+variable "cloudfront_domains" {
+  description = "List of domains to create A records for CloudFront"
+  type        = list(string)
+  default     = []
+}
+
 variable "cloudfront_domain_name" {
   description = "CloudFront distribution domain name"
   type        = string
