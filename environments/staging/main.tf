@@ -201,9 +201,8 @@ module "cloudfront" {
   origin_id          = "alb-origin"
   origin_type        = "alb"
 
-  # Custom domain configuration
-  custom_domain_names = ["staging.softradev.online"]
-  ssl_certificate_arn = "arn:aws:acm:us-east-1:398512629816:certificate/7d75a5f8-2b4b-4be3-9db1-72f0eb36a12e"
+  # Custom domain configuration (temporarily disabled until manual SSL certificate is created)
+  custom_domain_names = []
 
   # Performance settings
   compress    = true
@@ -470,24 +469,14 @@ module "route53" {
   domain_name  = "softradev.online"
   subdomain    = "staging"
 
-  # CloudFront configuration
-  create_cloudfront_record = true
-  cloudfront_domain_name   = module.cloudfront.distribution_domain_name
+  # CloudFront configuration (disabled until manual SSL certificate is created)
+  create_cloudfront_record = false
+  cloudfront_domain_name   = ""
 
   # Load balancer configuration (optional)
   create_load_balancer_record = false
 
-  # SSL Certificate validation CNAME record
-  cname_records = {
-    "_e4bd04d768df5105ddd28bc19aed8605" = {
-      value = "_2d40c1f91e588867fa6b7009f5658486.xlfgrmvvlj.acm-validations.aws"
-      ttl   = "300"
-    }
-  }
-
   tags = local.common_tags
-
-  depends_on = [module.cloudfront]
 }
 
 # Outputs are defined in outputs.tf

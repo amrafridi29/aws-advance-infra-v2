@@ -102,15 +102,14 @@ output "cloudfront_distribution_id" {
   value       = module.cloudfront.distribution_id
 }
 
-# Route 53 Module Outputs
+# Route 53 Outputs
 output "route53_outputs" {
-  description = "Route 53 module outputs"
-  value       = module.route53
+  description = "Outputs from the Route 53 module"
+  value       = module.route53.route53_summary
 }
 
-# Route 53 Domain Information (for easy access)
 output "custom_domain_name" {
-  description = "Custom domain name for staging environment"
+  description = "Custom domain name"
   value       = module.route53.full_domain_name
 }
 
