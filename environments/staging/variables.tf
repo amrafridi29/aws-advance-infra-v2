@@ -180,3 +180,15 @@ variable "ssl_certificate_arn" {
   type        = string
   default     = null
 }
+
+variable "enable_frontend_container" {
+  description = "Whether to enable the frontend container"
+  type        = bool
+  default     = true
+}
+
+variable "enable_backend_container" {
+  description = "Whether to enable the backend container"
+  type        = bool
+  default     = false
+}

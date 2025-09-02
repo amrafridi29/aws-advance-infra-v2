@@ -48,19 +48,15 @@ data "aws_lb" "staging" {
   depends_on = [module.networking]
 }
 
-# SSM Parameter Store resources for backend environment variables
-resource "aws_ssm_parameter" "backend_env_vars" {
+# Data sources to fetch manually created Parameter Store parameters
+data "aws_ssm_parameter" "backend_env_vars" {
   for_each = toset([
     "PORT",
     "DB_HOST",
     "DB_PORT",
   ])
 
-  name  = "/${var.project_name}/${var.environment}/backend/${each.value}"
-  type  = "String"
-  value = each.value
-
-  tags = local.common_tags
+  name = "/${var.project_name}/${var.environment}/backend/${each.value}"
 }
 
 # Local values for consistent naming and configuration
@@ -71,8 +67,8 @@ locals {
   azs = slice(data.aws_availability_zones.available.names, 0, 2)
 
   # Container configuration flags
-  enable_frontend_container = true
-  enable_backend_container  = true # Set to true when backend image is ready
+  enable_frontend_container = var.enable_frontend_container
+  enable_backend_container  = var.enable_backend_container # Set to false when only frontend is ready
 
   # Custom domain configuration
   custom_domains = var.custom_domains
@@ -407,15 +403,15 @@ module "compute" {
         secrets = [
           {
             name      = "PORT"
-            valueFrom = aws_ssm_parameter.backend_env_vars["PORT"].arn
+            valueFrom = data.aws_ssm_parameter.backend_env_vars["PORT"].arn
           },
           {
             name      = "DB_HOST"
-            valueFrom = aws_ssm_parameter.backend_env_vars["DB_HOST"].arn
+            valueFrom = data.aws_ssm_parameter.backend_env_vars["DB_HOST"].arn
           },
           {
             name      = "DB_PORT"
-            valueFrom = aws_ssm_parameter.backend_env_vars["DB_PORT"].arn
+            valueFrom = data.aws_ssm_parameter.backend_env_vars["DB_PORT"].arn
           },
         ]
         health_check = {
