@@ -533,4 +533,50 @@ module "monitoring" {
 #   depends_on = [module.cloudfront]
 # }
 
+# ElastiCache Module
+module "elasticache" {
+  source = "../../modules/elasticache"
+
+  project_name = var.project_name
+  environment  = var.environment
+
+  enable_elasticache = var.enable_elasticache
+
+  vpc_id     = module.networking.vpc_id
+  subnet_ids = module.networking.private_subnet_ids
+
+  allowed_security_group_ids = [module.security.app_security_group_id]
+
+  # Performance configuration for production
+  node_type        = "cache.t3.small"
+  multi_az_enabled = false # Enable for high availability if needed
+
+  # Redis configuration
+  redis_parameters = [
+    {
+      name  = "maxmemory-policy"
+      value = "allkeys-lru"
+    },
+    {
+      name  = "notify-keyspace-events"
+      value = "Ex"
+    },
+    {
+      name  = "timeout"
+      value = "300"
+    }
+  ]
+
+  # Monitoring and alerting
+  enable_monitoring = true
+  enable_logging    = true
+  alarm_actions     = [module.monitoring.ecr_notifications_topic_arn]
+
+  # Backup configuration
+  snapshot_retention_days = 7
+  snapshot_window         = "03:00-04:00"
+  maintenance_window      = "sun:04:00-sun:05:00"
+
+  tags = local.common_tags
+}
 # Outputs are defined in outputs.tf

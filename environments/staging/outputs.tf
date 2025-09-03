@@ -117,3 +117,34 @@ output "cloudfront_distribution_id" {
 #   description = "Name servers for DNS configuration"
 #   value       = module.route53.name_servers
 # }
+
+# ElastiCache Outputs
+output "elasticache_cluster_id" {
+  description = "ElastiCache cluster ID"
+  value       = module.elasticache.elasticache_cluster_id
+}
+
+output "elasticache_endpoint" {
+  description = "ElastiCache primary endpoint"
+  value       = module.elasticache.elasticache_endpoint
+}
+
+output "elasticache_port" {
+  description = "ElastiCache port"
+  value       = module.elasticache.elasticache_port
+}
+
+output "elasticache_connection_string" {
+  description = "Redis connection string for applications"
+  value       = module.elasticache.elasticache_connection_string
+}
+
+output "elasticache_security_group_id" {
+  description = "ElastiCache security group ID"
+  value       = module.elasticache.elasticache_security_group_id
+}
+
+output "elasticache_summary" {
+  description = "Summary of ElastiCache configuration"
+  value       = module.elasticache.elasticache_summary
+}

@@ -224,3 +224,11 @@ variable "ecr_security_emails" {
   type        = list(string)
   default     = []
 }
+
+
+# elasticache
+variable "enable_elasticache" {
+  description = "Whether to enable ElastiCache Redis cluster"
+  type        = bool
+  default     = false
+}
