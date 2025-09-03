@@ -1,4 +1,4 @@
-# Staging Environment - Outputs
+# Production Environment - Outputs
 # This file defines all outputs from the staging environment
 
 # Environment Information

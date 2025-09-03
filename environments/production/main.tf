@@ -1,5 +1,5 @@
-# Staging Environment - Main Configuration
-# This file orchestrates the deployment of all infrastructure components for staging
+# Production Environment - Main Configuration
+# This file orchestrates the deployment of all infrastructure components for production
 
 terraform {
   required_version = ">= 1.0"
@@ -14,7 +14,7 @@ terraform {
   # Uncomment and configure after backend infrastructure is deployed
   backend "s3" {
     bucket         = "terraform-state-398512629816-us-east-2"
-    key            = "environments/staging/terraform.tfstate"
+    key            = "environments/production/terraform.tfstate"
     region         = "us-east-2"
     dynamodb_table = "terraform-locks-398512629816-us-east-2"
     encrypt        = true
@@ -30,7 +30,7 @@ provider "aws" {
       Environment = var.environment
       Project     = var.project_name
       ManagedBy   = "Terraform"
-      Purpose     = "Staging Infrastructure"
+      Purpose     = "Production Infrastructure"
     }
   }
 }
@@ -43,7 +43,7 @@ data "aws_availability_zones" "available" {
 }
 
 # Load balancer data source for CloudFront
-data "aws_lb" "staging" {
+data "aws_lb" "production" {
   name       = "${var.project_name}-${var.environment}-alb"
   depends_on = [module.networking]
 }
@@ -63,7 +63,7 @@ data "aws_ssm_parameter" "backend_env_vars" {
 locals {
   environment = var.environment
 
-  # Availability zones (limit to 2 for cost optimization in staging)
+  # Availability zones (limit to 2 for cost optimization in production)
   azs = slice(data.aws_availability_zones.available.names, 0, 2)
 
   # Container configuration flags
@@ -80,7 +80,7 @@ locals {
     Environment = var.environment
     Project     = var.project_name
     ManagedBy   = "Terraform"
-    Purpose     = "Staging Infrastructure"
+    Purpose     = "Production Infrastructure"
     Owner       = var.team_name
     CostCenter  = var.cost_center
   }
@@ -170,7 +170,7 @@ module "storage" {
   # S3 Storage
   enable_s3_storage = true
 
-  # RDS Database (disabled for staging - requires password)
+  # RDS Database (disabled for production - requires password)
   enable_rds            = false
   rds_instance_class    = "db.t3.micro"
   rds_engine            = "mysql"
@@ -180,10 +180,10 @@ module "storage" {
   rds_username          = "staging_user"
   rds_password          = "db-password"
 
-  # ElastiCache (disabled for staging)
+  # ElastiCache (disabled for production)
   enable_elasticache = false
 
-  # EBS Volumes (disabled for staging)
+  # EBS Volumes (disabled for production)
   enable_ebs = false
 
   # Encryption
@@ -218,7 +218,7 @@ module "cloudfront" {
 
   project_name       = var.project_name
   environment        = var.environment
-  origin_domain_name = data.aws_lb.staging.dns_name
+  origin_domain_name = data.aws_lb.production.dns_name
   origin_id          = "alb-origin"
   origin_type        = "alb"
 
@@ -308,7 +308,7 @@ module "cloudfront" {
 
   tags = local.common_tags
 
-  depends_on = [module.networking, data.aws_lb.staging]
+  depends_on = [module.networking, data.aws_lb.production]
 }
 
 # Security Module
@@ -322,9 +322,9 @@ module "security" {
   # Security Groups
   create_security_groups = true
   allowed_cidr_blocks    = var.allowed_cidr_blocks
-  enable_ssh_access      = false # Disable SSH for staging security
-  enable_http_access     = true  # Enable HTTP for staging
-  enable_https_access    = true  # Enable HTTPS for staging
+  enable_ssh_access      = false # Disable SSH for production security
+  enable_http_access     = true  # Enable HTTP for production
+  enable_https_access    = true  # Enable HTTPS for production
   enable_database_access = true  # Enable database access
   database_port          = 3306  # Default MySQL port
 
@@ -366,7 +366,7 @@ module "compute" {
         environment = [
           {
             name  = "ENVIRONMENT"
-            value = "staging"
+            value = "production"
           },
           {
             name  = "APP_VERSION"
@@ -393,7 +393,7 @@ module "compute" {
         environment = [
           {
             name  = "ENVIRONMENT"
-            value = "staging"
+            value = "production"
           },
           {
             name  = "APP_VERSION"
@@ -435,7 +435,7 @@ module "compute" {
   # Enable ECS Exec for debugging
   enable_execute_command = true
 
-  # Service Discovery (disabled for staging)
+  # Service Discovery (disabled for production)
   enable_service_discovery = false
 
   # Advanced Auto Scaling Configuration
@@ -484,20 +484,20 @@ module "monitoring" {
   # CloudWatch Logs
   enable_cloudwatch_logs = var.enable_cloudwatch_logs
 
-  # CloudTrail (disabled for staging - requires S3 bucket)
+  # CloudTrail (disabled for production - requires S3 bucket)
   enable_cloudtrail = false
 
-  # Alarms and Dashboards (optional for staging)
+  # Alarms and Dashboards (optional for production)
   enable_alarms     = false
   enable_dashboards = false
 
-  # ECS Log Groups (enabled for staging)
+  # ECS Log Groups (enabled for production)
   enable_ecs_log_groups = true
   ecs_log_groups = [
     {
       name              = "/ecs/${var.project_name}-${var.environment}-task"
       retention_in_days = 7
-      kms_key_arn       = "" # Disable KMS encryption for staging to avoid permission issues
+      kms_key_arn       = "" # Disable KMS encryption for production to avoid permission issues
     }
   ]
 
@@ -517,7 +517,7 @@ module "monitoring" {
 #   create_cloudfront_record = true
 #   cloudfront_domain_name   = module.cloudfront.distribution_domain_name
 
-#   # Multiple domains for CloudFront (both staging and www.staging)
+#   # Multiple domains for CloudFront (both production and www.production)
 #   cloudfront_domains = local.custom_domains
 
 #   # Load balancer configuration (optional)

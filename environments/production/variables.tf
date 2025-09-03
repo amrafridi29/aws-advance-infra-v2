@@ -1,18 +1,18 @@
-# Staging Environment - Variables
-# This file defines all variables used in the staging environment configuration
+# Production Environment - Variables
+# This file defines all variables used in the production environment configuration
 
 # AWS Configuration
 variable "aws_region" {
-  description = "AWS region for the staging environment"
+  description = "AWS region for the production environment"
   type        = string
   default     = "us-east-2"
 }
 
 # Environment Configuration
 variable "environment" {
-  description = "Environment name (staging)"
+  description = "Environment name (production)"
   type        = string
-  default     = "staging"
+  default     = "production"
 }
 
 variable "project_name" {
@@ -72,7 +72,7 @@ variable "enable_flow_logs" {
 
 # Compute Configuration (for future use)
 variable "instance_type" {
-  description = "EC2 instance type for staging"
+  description = "EC2 instance type for production"
   type        = string
   default     = "t3.micro"
 }
@@ -97,7 +97,7 @@ variable "desired_capacity" {
 
 # Storage Configuration (for future use)
 variable "db_instance_class" {
-  description = "RDS instance class for staging"
+  description = "RDS instance class for production"
   type        = string
   default     = "db.t3.micro"
 }
@@ -118,7 +118,7 @@ variable "db_engine_version" {
 variable "allowed_cidr_blocks" {
   description = "CIDR blocks allowed to access the infrastructure"
   type        = list(string)
-  default     = ["10.0.0.0/16", "0.0.0.0/0"] # More permissive for staging
+  default     = ["10.0.0.0/16", "0.0.0.0/0"] # More permissive for production
 }
 
 variable "enable_encryption" {
@@ -135,7 +135,7 @@ variable "enable_cloudwatch_logs" {
 }
 
 variable "enable_cloudtrail" {
-  description = "Enable CloudTrail logging (disabled for staging - requires S3 bucket)"
+  description = "Enable CloudTrail logging (disabled for production - requires S3 bucket)"
   type        = bool
   default     = false
 }
@@ -158,8 +158,8 @@ variable "custom_domains" {
   description = "List of custom domains for CloudFront and Route 53"
   type        = list(string)
   default = [
-    "staging.softradev.online",
-    "www.staging.softradev.online"
+    "production.softradev.online",
+    "www.production.softradev.online"
   ]
 }
 
@@ -170,9 +170,9 @@ variable "base_domain" {
 }
 
 variable "subdomain" {
-  description = "Subdomain name (e.g., staging)"
+  description = "Subdomain name (e.g., production)"
   type        = string
-  default     = "staging"
+  default     = "production"
 }
 
 variable "ssl_certificate_arn" {
