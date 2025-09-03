@@ -96,6 +96,31 @@ variable "app_role_kms_keys" {
   default     = []
 }
 
+# GitHub OIDC Configuration
+variable "enable_github_oidc" {
+  description = "Whether to enable GitHub OIDC integration for CI/CD"
+  type        = bool
+  default     = false
+}
+
+variable "frontend_repository" {
+  description = "Frontend GitHub repository (e.g., 'your-org/frontend-repo')"
+  type        = string
+  default     = ""
+}
+
+variable "backend_repository" {
+  description = "Backend GitHub repository (e.g., 'your-org/backend-repo')"
+  type        = string
+  default     = ""
+}
+
+variable "allowed_branches" {
+  description = "List of branches allowed to assume the GitHub Actions role"
+  type        = list(string)
+  default     = ["main", "staging"]
+}
+
 # Tags
 variable "tags" {
   description = "Additional tags to apply to all resources"

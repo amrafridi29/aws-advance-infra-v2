@@ -142,6 +142,12 @@ module "iam" {
   # VPC Flow Log Role (required for monitoring)
   create_vpc_flow_log_role = true
 
+  # GitHub OIDC Configuration
+  enable_github_oidc  = var.enable_github_oidc
+  frontend_repository = var.frontend_repository
+  backend_repository  = var.backend_repository
+  allowed_branches    = var.allowed_branches
+
   tags = local.common_tags
 }
 

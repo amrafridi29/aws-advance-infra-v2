@@ -232,3 +232,28 @@ variable "enable_elasticache" {
   type        = bool
   default     = false
 }
+
+# github oidc
+variable "enable_github_oidc" {
+  description = "Whether to enable GitHub OIDC"
+  type        = bool
+  default     = true
+}
+
+variable "frontend_repository" {
+  description = "Frontend GitHub repository (e.g., 'your-org/frontend-repo')"
+  type        = string
+  default     = ""
+}
+
+variable "backend_repository" {
+  description = "Backend GitHub repository (e.g., 'your-org/backend-repo')"
+  type        = string
+  default     = ""
+}
+
+variable "allowed_branches" {
+  description = "List of branches allowed to assume the GitHub Actions role"
+  type        = list(string)
+  default     = ["main", "staging"]
+}

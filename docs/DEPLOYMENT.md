@@ -433,6 +433,9 @@ aws dynamodb scan --table-name terraform-state-lock
 
 # Force unlock (use with caution)
 terraform force-unlock <lock-id>
+
+cd environments/staging
+terraform force-unlock e9248e26-5293-34d9-d50d-9bee66c9cd1b
 ```
 
 #### **2. ECS Service Won't Start**

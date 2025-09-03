@@ -83,6 +83,98 @@ resource "aws_iam_role_policy" "vpc_flow_log" {
   })
 }
 
+# GitHub OIDC Identity Provider
+resource "aws_iam_openid_connect_provider" "github" {
+  count = var.enable_github_oidc ? 1 : 0
+  url   = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = [
+    "6938fd4d98bab03faadb97b34396831e3780aea1",
+    "1c58a3a8518e8759bf075b76b750d4f2df264fcd"
+  ]
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-github-oidc-provider"
+      Type = "OIDC Provider"
+    }
+  )
+}
+
+# GitHub Actions IAM Role
+resource "aws_iam_role" "github_actions" {
+  count = var.enable_github_oidc ? 1 : 0
+  name  = "${local.name_prefix}-github-actions-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github[0].arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" : concat(
+              [for branch in var.allowed_branches : "repo:${var.frontend_repository}:ref:refs/heads/${branch}"],
+              [for branch in var.allowed_branches : "repo:${var.backend_repository}:ref:refs/heads/${branch}"]
+            )
+          }
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    local.common_tags,
+    {
+      Name = "${local.name_prefix}-github-actions-role"
+      Type = "GitHub Actions"
+    }
+  )
+}
+
+# GitHub Actions ECR Policy
+resource "aws_iam_role_policy" "github_actions_ecr" {
+  count = var.enable_github_oidc ? 1 : 0
+  name  = "${local.name_prefix}-github-actions-ecr-policy"
+  role  = aws_iam_role.github_actions[0].id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:PutImage",
+          "ecr:CreateRepository",
+          "ecr:DescribeRepositories",
+          "ecr:DescribeImages",
+          "ecr:ListImages",
+          "ecr:DeleteImage",
+          "ecr:BatchDeleteImage"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # Application IAM Role
 resource "aws_iam_role" "app" {
   count = var.create_app_role ? 1 : 0
