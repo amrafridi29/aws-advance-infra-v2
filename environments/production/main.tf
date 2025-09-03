@@ -496,10 +496,15 @@ module "monitoring" {
   ecs_log_groups = [
     {
       name              = "/ecs/${var.project_name}-${var.environment}-task"
-      retention_in_days = 7
-      kms_key_arn       = "" # Disable KMS encryption for production to avoid permission issues
+      retention_in_days = 30
+      kms_key_arn       = module.encryption.main_key_arn
     }
   ]
+
+  # ECR Scan Events and Notifications
+  enable_ecr_scan_events  = true
+  ecr_notification_emails = var.ecr_notification_emails
+  ecr_security_emails     = var.ecr_security_emails
 
   tags = local.common_tags
 }

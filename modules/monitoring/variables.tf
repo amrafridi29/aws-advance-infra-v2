@@ -98,6 +98,25 @@ variable "enable_alarms" {
   default     = false
 }
 
+# ECR Scan Events Configuration
+variable "enable_ecr_scan_events" {
+  description = "Whether to enable ECR scan event monitoring and notifications"
+  type        = bool
+  default     = true
+}
+
+variable "ecr_notification_emails" {
+  description = "List of email addresses for ECR scan notifications"
+  type        = list(string)
+  default     = []
+}
+
+variable "ecr_security_emails" {
+  description = "List of email addresses for ECR security alerts"
+  type        = list(string)
+  default     = []
+}
+
 variable "alarm_email" {
   description = "Email address for alarm notifications"
   type        = string

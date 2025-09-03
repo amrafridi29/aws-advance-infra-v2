@@ -22,8 +22,8 @@ module "networking" {
   enable_vpn_gateway = true
 
   # VPC Flow Logs
-  enable_flow_logs        = true
-  flow_log_retention_days = 90
+  # enable_flow_logs        = true
+  # flow_log_retention_days = 90
 
   # DNS configuration
   enable_dns_hostnames = true

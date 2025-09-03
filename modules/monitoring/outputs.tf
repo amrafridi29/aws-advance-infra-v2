@@ -103,9 +103,37 @@ output "ecs_log_group_names" {
   value       = var.enable_ecs_log_groups ? [for lg in aws_cloudwatch_log_group.ecs : lg.name] : []
 }
 
-output "ecs_log_group_arns" {
-  description = "List of ECS log group ARNs"
-  value       = var.enable_ecs_log_groups ? [for lg in aws_cloudwatch_log_group.ecs : lg.arn] : []
+# EventBridge Outputs
+output "eventbridge_outputs" {
+  description = "EventBridge module outputs"
+  value       = module.eventbridge
+}
+
+# SNS Outputs
+output "sns_outputs" {
+  description = "SNS module outputs"
+  value       = module.sns
+}
+
+# ECR Notification Outputs
+output "ecr_notifications_topic_arn" {
+  description = "ARN of the ECR notifications SNS topic"
+  value       = var.enable_ecr_scan_events ? module.sns.ecr_notifications_topic_arn : null
+}
+
+output "ecr_security_alerts_topic_arn" {
+  description = "ARN of the ECR security alerts SNS topic"
+  value       = var.enable_ecr_scan_events ? module.sns.ecr_security_alerts_topic_arn : null
+}
+
+output "ecr_scan_finding_rule_arn" {
+  description = "ARN of the ECR scan finding event rule"
+  value       = var.enable_ecr_scan_events ? module.eventbridge.ecr_scan_finding_rule_arn : null
+}
+
+output "ecr_scan_complete_rule_arn" {
+  description = "ARN of the ECR scan complete event rule"
+  value       = var.enable_ecr_scan_events ? module.eventbridge.ecr_scan_complete_rule_arn : null
 }
 
 # Monitoring Summary

@@ -501,6 +501,11 @@ module "monitoring" {
     }
   ]
 
+  # ECR Scan Events and Notifications
+  enable_ecr_scan_events  = true
+  ecr_notification_emails = var.ecr_notification_emails
+  ecr_security_emails     = var.ecr_security_emails
+
   tags = local.common_tags
 }
 

@@ -211,3 +211,16 @@ variable "max_capacity" {
   type        = number
   default     = 3
 }
+
+# ecr
+variable "ecr_notification_emails" {
+  description = "List of email addresses for ECR notifications"
+  type        = list(string)
+  default     = []
+}
+
+variable "ecr_security_emails" {
+  description = "List of email addresses for ECR security alerts"
+  type        = list(string)
+  default     = []
+}

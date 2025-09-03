@@ -15,7 +15,7 @@ module "compute" {
   enable_ecs = true
 
   # Load Balancer
-  enable_load_balancer = true
+  # enable_load_balancer = true
 
   # ECS Service
   enable_ecs_service = true

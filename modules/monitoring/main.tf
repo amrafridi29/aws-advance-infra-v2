@@ -28,6 +28,47 @@ locals {
 }
 
 # =============================================================================
+# EVENTBRIDGE INTEGRATION
+# =============================================================================
+
+# EventBridge Module for ECR Scan Events
+module "eventbridge" {
+  source = "../eventbridge"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  # ECR scan events
+  enable_ecr_scan_events   = var.enable_ecr_scan_events
+  enable_sns_notifications = var.enable_ecr_scan_events
+  sns_topic_arn            = module.sns.ecr_notifications_topic_arn
+
+  tags = local.common_tags
+}
+
+# =============================================================================
+# SNS INTEGRATION
+# =============================================================================
+
+# SNS Module for ECR Notifications
+module "sns" {
+  source = "../sns"
+
+  environment  = var.environment
+  project_name = var.project_name
+
+  # Enable ECR notifications
+  enable_ecr_notifications   = var.enable_ecr_scan_events
+  enable_ecr_security_alerts = var.enable_ecr_scan_events
+
+  # Email subscriptions
+  email_subscriptions          = var.ecr_notification_emails
+  security_email_subscriptions = var.ecr_security_emails
+
+  tags = local.common_tags
+}
+
+# =============================================================================
 # CLOUDWATCH LOG GROUPS
 # =============================================================================
 

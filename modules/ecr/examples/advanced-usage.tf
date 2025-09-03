@@ -12,10 +12,10 @@ module "ecr_advanced" {
   enable_backend_repository  = true
 
   # Advanced features
-  enable_image_scanning      = true
-  enable_lifecycle_policies  = true
-  enable_repository_policies = true
-  max_image_count            = 20
+  enable_image_scanning     = true
+  enable_lifecycle_policies = true
+  ## enable_repository_policies = true
+  max_image_count = 20
 
   tags = {
     Environment = "production"
